@@ -1,11 +1,16 @@
-const {getWeatherAtPointTime} = require('../utils/weather')
+const { getWeatherAtPointTime } = require("../utils/weather");
 
-const weatherController = require('express').Router()
+const weatherController = require("express").Router();
 
-weatherController.get('/:latitude&:longitude&:time', (req, res) => {
-  let location = {latitude: req.params.latitude, longitude: req.params.longitude}
-  
-  getWeatherAtPointTime(location, req.params.time)
-})
+weatherController.get("/:latitude&:longitude&:time", (req, res) => {
+  let location = {
+    latitude: req.params.latitude,
+    longitude: req.params.longitude,
+  };
 
-module.exports = weatherController
+  let hello = getWeatherAtPointTime(location, req.params.time);
+
+  res.send(hello);
+});
+
+module.exports = weatherController;
