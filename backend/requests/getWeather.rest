@@ -1,0 +1,1 @@
+GET http://localhost:3001/api/weather/50&49&48
