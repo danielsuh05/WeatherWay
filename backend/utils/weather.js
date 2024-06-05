@@ -1,10 +1,3 @@
-const dayjs = require("dayjs");
-const utc = require("dayjs/plugin/utc");
-const timezone = require("dayjs/plugin/timezone");
-
-dayjs.extend(utc);
-dayjs.extend(timezone);
-
 const baseURL =
   "https://api.open-meteo.com/v1/forecast?&hourly=temperature_2m,precipitation_probability,precipitation,rain,showers,snowfall,snow_depth,cloud_cover,visibility,wind_speed_10m,wind_gusts_10m,uv_index,is_day&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=1";
 
@@ -12,7 +5,7 @@ const baseURL =
  *
  * @param {number} latitude latitude to get weather for
  * @param {number} longitude longitude to get weather for
- * @param {dayjs.Dayjs} time time LOCALIZED to the specific (longitude, latitude)
+ * @param {string} time time LOCALIZED to the specific (longitude, latitude)
  * @returns {object} the data object with the respective data
  */
 let getWeatherAtPointTime = async (latitude, longitude, time) => {
@@ -23,15 +16,21 @@ let getWeatherAtPointTime = async (latitude, longitude, time) => {
       if (response.ok) {
         return response.json();
       }
-      throw new Error("error getting data from weather API.");
+      throw new Error("Error getting data from weather API.");
     })
     .then((responseJSON) => {
       const timeID = responseJSON.hourly.time.findIndex((t) => t === time);
 
+      if(timeID === -1) {
+        throw new Error("Error processing the date.")
+      }
+
       const weatherObject = {
+        timezone: responseJSON.timezone,
         time: responseJSON.hourly.time[timeID],
         temperature_2m: responseJSON.hourly.temperature_2m[timeID],
-        precipitation_probability: responseJSON.hourly.precipitation_probability[timeID],
+        precipitation_probability:
+          responseJSON.hourly.precipitation_probability[timeID],
         precipitation: responseJSON.hourly.precipitation[timeID],
         rain: responseJSON.hourly.rain[timeID],
         showers: responseJSON.hourly.showers[timeID],
@@ -42,7 +41,7 @@ let getWeatherAtPointTime = async (latitude, longitude, time) => {
         wind_speed_10m: responseJSON.hourly.wind_speed_10m[timeID],
         wind_gusts_10m: responseJSON.hourly.wind_gusts_10m[timeID],
         uv_index: responseJSON.hourly.uv_index[timeID],
-        is_day: responseJSON.hourly.is_day[timeID]
+        is_day: responseJSON.hourly.is_day[timeID],
       };
 
       return weatherObject;
@@ -52,7 +51,7 @@ let getWeatherAtPointTime = async (latitude, longitude, time) => {
       return;
     });
 
-    return weather;
+  return weather;
 };
 
 module.exports = {

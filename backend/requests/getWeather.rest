@@ -1,1 +1,1 @@
-GET http://localhost:3001/api/weather/50&49&48
+GET http://localhost:3001/api/weather/500&49&2024-06-05T23:00
