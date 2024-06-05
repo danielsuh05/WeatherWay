@@ -1,35 +1,23 @@
 const { describe, expect, test } = require("@jest/globals");
-const { EPSILON } = require("../utils/test_utils");
-const { getDiffHourly } = require("../utils/weather");
+const { MILLISECOND_EPSILON } = require("../utils/test_utils");
+const { getDiffHourly, getHourlyJSONTime } = require("../utils/weather");
+const dayjs = require("dayjs");
 
 describe("ensure api's hourly value is correct", () => {
   test("today + 0 hours", () => {
-    const date = new Date(Date.now());
-    const diff = getDiffHourly(date);
+    const diff = getDiffHourly(dayjs());
     
-    expect(diff).toBeCloseTo(0, EPSILON);
+    expect(diff).toBeCloseTo(0, MILLISECOND_EPSILON);
   });
   
   test("today + 12 hours", () => {
-    const date = new Date(Date.now());
-    const diff = getDiffHourly(date) + 12 * 60 * 60 * 1000;
-    
-    expect(diff).toBeCloseTo(12 * 60 * 60 * 1000, EPSILON);
-  });
-
-  test("out of bounds back", () => {
-    const date = new Date(Date.now());
-    const diff = getDiffHourly(date);
-
-    const maxDate = date.getTime() + 
-    
-    expect(diff).toBeCloseTo(0, EPSILON);
-  });
-
-  test("out of bounds forward", () => {
-    const date = new Date(Date.now());
+    const date = dayjs(new Date()).add(12, 'hours');
     const diff = getDiffHourly(date);
     
-    expect(diff).toBeCloseTo(0, EPSILON);
+    expect(diff).toBeCloseTo(12 * 60 * 60 * 1000, MILLISECOND_EPSILON);
   });
+
+  test("getHourlyJSON current time", () => {
+    getHourlyJSONTime(dayjs().unix());
+  })
 });
