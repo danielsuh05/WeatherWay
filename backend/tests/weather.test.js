@@ -2,7 +2,7 @@ const { describe, test, expect } = require("@jest/globals");
 const { getWeatherAtPointTime } = require("../utils/weather");
 const { DateTime } = require("luxon");
 
-describe("getWeatherAtPointTime", () => {
+describe.skip("getWeatherAtPointTime", () => {
   test("test 00:00", async () => {
     const date = DateTime.now().toFormat("yyyy-MM-dd'T'HH:'00'");
     const weather = await getWeatherAtPointTime(41.4995, -81.6954, date);

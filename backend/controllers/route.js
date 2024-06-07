@@ -5,7 +5,7 @@ const routeController = require("express").Router();
  * longitude {number}
  * time {string} - MUST be in form YYYY-MM-DDTHH:MM
  */
-routeController.get(":startLat&:startLong&:endLat&:endLong", async (req, res) => {
+routeController.get(":startLong&:startLat&:endLong&:endLat", async (req, res) => {
   res.send("TODO: not finished");
 });
 

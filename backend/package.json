@@ -5,12 +5,14 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "jest"
+    "test": "jest",
+    "test:silent": "jest --silent"
   },
   "author": "Daniel Suh",
   "license": "MIT",
   "description": "",
   "dependencies": {
+    "cheap-ruler": "^3.0.2",
     "cors": "^2.8.5",
     "dayjs": "^1.11.11",
     "dotenv": "^16.4.5",

@@ -1,4 +1,4 @@
-const EPSILON = 4;
+const EPSILON = 0.00001;
 
 // give 10 milliseconds of error room because methods in-between will take multiple milliseconds to complete:w
 const MILLISECOND_EPSILON = -1;
