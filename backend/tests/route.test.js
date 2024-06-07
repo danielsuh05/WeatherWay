@@ -19,7 +19,7 @@ describe("getRoute", () => {
     expect(r).toBeUndefined();
   });
 
-  test.only("get time along path normal", async() => {
+  test.only("getTimeAlongPath early point", async() => {
     const r = await route.getRoute(
       -74.864549,
       42.632477,
@@ -27,7 +27,31 @@ describe("getRoute", () => {
       40.329155
     );
 
-    const t = route.getTimeAlongPath(-74.867341, 42.635203, JSON.stringify(r.path));
+    const t = route.getTimeAlongPath(-74.556541, 40.35287, JSON.stringify(r.path));
     expect(t).toBeDefined();
+  })
+
+  test.only("getTimeAlongPath later point", async() => {
+    const r = await route.getRoute(
+      -74.864549,
+      42.632477,
+      -74.551546,
+      40.329155
+    );
+
+    const t = route.getTimeAlongPath(-74.55828, 40.332149, JSON.stringify(r.path));
+    expect(t).toBeDefined();
+  })
+
+  test.only("getTimeAlongPath point not on path", async() => {
+    const r = await route.getRoute(
+      -74.864549,
+      42.632477,
+      -74.551546,
+      40.329155
+    );
+
+    const t = () => route.getTimeAlongPath(74.55828, 40.332149, JSON.stringify(r.path));
+    expect(t).toThrowError();
   })
 });

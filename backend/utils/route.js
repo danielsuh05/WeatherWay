@@ -78,7 +78,6 @@ let getTimeAlongPath = (longitude, latitude, routeString) => {
   };
 
   // we can use the cache results because `getRoute` will be called before this.
-  // const routeString = localStorage.getItem('cachedRoute');
   // TODO: FIX THE LOCALSTORAGE CACHE ISSUES
   if (routeString) {
     const route = JSON.parse(routeString);
@@ -89,8 +88,8 @@ let getTimeAlongPath = (longitude, latitude, routeString) => {
     for (let i = 0; i < legs.length; i++) {
       for (let j = 0; j < legs[i].steps.length; j++) {
         const coordinates = legs[i].steps[j].geometry.coordinates;
-        let curDistance = 0,
-          overallDistance = legs[i].steps[j].distance;
+        let curDistance = 0;
+        const overallDistance = legs[i].steps[j].distance;
 
         for (let k = 0; k < coordinates.length; k++) {
           if (k > 0) {
@@ -99,7 +98,7 @@ let getTimeAlongPath = (longitude, latitude, routeString) => {
               coordinates[k][0],
               coordinates[k - 1][1],
               coordinates[k - 1][0]
-            );
+            ) * 1000; // convert to meters
           }
           if (
             epsilonEqual(coordinates[k][0], longitude) &&
