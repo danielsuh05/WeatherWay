@@ -72,7 +72,8 @@ let getMarkers = (routeGeometry) => {
  * @param {number} latitude latitude to get info from
  * @returns object containing LOCAL time when they will arrive along the path
  */
-let getTimeAlongPath = (longitude, latitude, routeString) => {
+let getTimeOffsetAlongPath = (longitude, latitude, routeString) => {
+  // TODO: optimize this with cache stuff
   let epsilonEqual = (a, b) => {
     return Math.abs(a - b) < utils.EPSILON;
   };
@@ -93,12 +94,13 @@ let getTimeAlongPath = (longitude, latitude, routeString) => {
 
         for (let k = 0; k < coordinates.length; k++) {
           if (k > 0) {
-            curDistance += latLongDistance(
-              coordinates[k][1],
-              coordinates[k][0],
-              coordinates[k - 1][1],
-              coordinates[k - 1][0]
-            ) * 1000; // convert to meters
+            curDistance +=
+              latLongDistance(
+                coordinates[k][1],
+                coordinates[k][0],
+                coordinates[k - 1][1],
+                coordinates[k - 1][0]
+              ) * 1000; // convert to meters
           }
           if (
             epsilonEqual(coordinates[k][0], longitude) &&
@@ -152,12 +154,14 @@ let getRoute = async (startLong, startLat, endLong, endLat) => {
         markers: markers,
       };
     })
-    .catch((error) => console.log(error));
+    .catch((error) => {
+      throw new Error(error);
+    });
 
   return route;
 };
 
 module.exports = {
   getRoute,
-  getTimeAlongPath,
+  getTimeOffsetAlongPath,
 };

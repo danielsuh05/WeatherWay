@@ -5,7 +5,7 @@ const baseURL =
  *
  * @param {number} latitude latitude to get weather for
  * @param {number} longitude longitude to get weather for
- * @param {string} time time LOCALIZED to the specific (longitude, latitude)
+ * @param {string} time time LOCALIZED to the specific (longitude, latitude). Should be in format yyyy-MM-ddTHH:mm
  * @returns {object} the data object with the respective data
  */
 let getWeatherAtPointTime = async (latitude, longitude, time) => {
@@ -47,8 +47,7 @@ let getWeatherAtPointTime = async (latitude, longitude, time) => {
       return weatherObject;
     })
     .catch((error) => {
-      console.log(error);
-      return;
+      throw new Error(error);
     });
 
   return weather;
