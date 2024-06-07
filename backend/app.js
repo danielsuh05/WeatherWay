@@ -11,6 +11,6 @@ app.use(express.json())
 app.use(middleware.requestLogger)
 
 app.use('/api/weather', weatherController)
-app.use('/api/routes', routeController)
+app.use('/api/route', routeController)
 
 module.exports = app

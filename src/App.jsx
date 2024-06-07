@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import weatherService from "./services/weather";
+import routeService from "./services/route";
 import mapboxgl from "mapbox-gl";
 
 function App() {
@@ -33,16 +34,14 @@ function App() {
       setZoom(map.current.getZoom().toFixed(2));
     });
 
-    // create a function to make a directions request
     async function getRoute(start, end) {
-      // make a directions request using cycling profile
-      // an arbitrary start will always be the same
-      // only the end or destination will change
-      const query = await fetch(
-        `https://api.mapbox.com/directions/v5/mapbox/cycling/${start[0]},${start[1]};${end[0]},${end[1]}?steps=true&geometries=geojson&access_token=${mapboxgl.accessToken}`,
-        { method: "GET" }
+      const json = await routeService.getRoute(
+        start[0],
+        start[1],
+        end[0],
+        end[1]
       );
-      const json = await query.json();
+
       const data = json.routes[0];
       const route = data.geometry.coordinates;
       const geojson = {
@@ -115,11 +114,13 @@ function App() {
   });
 
   return (
-    <div>
-      <div className="sidebar">
-        Longitude: {lng} | Latitude: {lat} | Zoom: {zoom}
+    <div className="overall-container">
+      <div className="content-container">
+        {/* <div className="sidebar">
+          Longitude: {lng} | Latitude: {lat} | Zoom: {zoom}
+        </div> */}
+        <div ref={mapContainer} className="map-container" />
       </div>
-      <div ref={mapContainer} className="map-container" />
     </div>
   );
 }

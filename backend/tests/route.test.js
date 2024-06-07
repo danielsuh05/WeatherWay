@@ -45,6 +45,7 @@ describe("getRoute", () => {
   })
 
   test("getTimeAlongPath() point not on path", async() => {
+    // TODO: SERVER CRASHES BECAUSE IT THROWS ERROR
     const r = await route.getRoute(
       -74.864549,
       42.632477,

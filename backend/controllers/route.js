@@ -1,8 +1,9 @@
-const {getRoute, getTimeOffsetAlongPath} = require("../utils/route");
+const {getRoute, getTimeOffsetAlongPath, getMarkersAlongPath} = require("../utils/route");
 
 const routeController = require("express").Router();
 
-routeController.get(":startLong&:startLat&:endLong&:endLat", async (req, res) => {
+routeController.get("/path/:startLong&:startLat&:endLong&:endLat", async (req, res) => {
+  console.log(req.params)
   let route = await getRoute(req.params.startLong, req.params.startLat, req.params.endLong, req.params.endLat);
 
   // If there was an error getting data from API, send status code 202
@@ -10,11 +11,11 @@ routeController.get(":startLong&:startLat&:endLong&:endLat", async (req, res) =>
     res
       .status(202)
       .send(
-        "Error getting data from API, check if latitude, longitude, and time are in range."
+        "Error getting data from API, check if longitude, latitude, and time are in range."
       );
   }
 
-  res.send(route)
+  res.send(route);
 });
 
 routeController.get(":endLong&:endLat&:endLong&:endLat&:long&:lat", async (req, res) => {
@@ -25,12 +26,22 @@ routeController.get(":endLong&:endLat&:endLong&:endLat&:long&:lat", async (req, 
     res
       .status(202)
       .send(
-        "Error getting data from API, check if latitude, longitude, and time are in range."
+        "Error getting data from API, check if longitude and latitude are on the path."
       );
   }
 
   let time = getTimeOffsetAlongPath(req.params.long, req.params.lat, JSON.stringify(route));
   res.send(JSON.parse({time: time}));
+});
+
+routeController.get("/markers/:startLong&:startLat&:endLong&:endLat", async (req, res) => {
+  let markers = await getMarkersAlongPath(req.params.startLong, req.params.startLat, req.params.endLong, req.params.endLat);
+
+  if (markers === undefined) {
+    res.status(202).send("ERror getting data from API, check if longitude, latitude, and time are in range.")
+  }
+
+  res.json({markers: markers})
 });
 
 module.exports = routeController;

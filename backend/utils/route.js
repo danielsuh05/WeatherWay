@@ -122,12 +122,12 @@ let getTimeOffsetAlongPath = (longitude, latitude, routeString) => {
 };
 
 /**
- * Gets the JSON response + markers along the route from MapBox API given a start and end (longitude, latitude)
+ * Gets the JSON response of the route from MapBox API given a start and end (longitude, latitude)
  * @param {number} startLong starting longitude
  * @param {number} startLat starting latitude
  * @param {number} endLong ending longitude
  * @param {number} endLat ending latitude
- * @returns JSON response and markers from MapBox API
+ * @returns JSON response from MapBox API
  */
 let getRoute = async (startLong, startLat, endLong, endLat) => {
   const url = constructURL(startLong, startLat, endLong, endLat);
@@ -147,12 +147,44 @@ let getRoute = async (startLong, startLat, endLong, endLat) => {
         );
       }
 
+      return responseJSON;
+    })
+    .catch((error) => {
+      throw new Error(error);
+    });
+
+  return route;
+};
+
+/**
+ * Gets the markers along the route from MapBox API given a start and end (longitude, latitude)
+ * @param {number} startLong starting longitude
+ * @param {number} startLat starting latitude
+ * @param {number} endLong ending longitude
+ * @param {number} endLat ending latitude
+ * @returns markers along route from MapBox API
+ */
+let getMarkersAlongPath = async (startLong, startLat, endLong, endLat) => {
+  const url = constructURL(startLong, startLat, endLong, endLat);
+
+  const route = await fetch(url)
+    .then((response) => {
+      if (response.ok) {
+        return response.json();
+      }
+
+      throw new Error(`Error fetching from route API: ${response}`);
+    })
+    .then((responseJSON) => {
+      if (responseJSON.code !== "Ok") {
+        throw new Error(
+          `Error fetching from route API: ${responseJSON.message}`
+        );
+      }
+
       const markers = getMarkers(responseJSON.routes[0].geometry.coordinates);
 
-      return {
-        path: responseJSON,
-        markers: markers,
-      };
+      return markers;
     })
     .catch((error) => {
       throw new Error(error);
@@ -164,4 +196,5 @@ let getRoute = async (startLong, startLat, endLong, endLat) => {
 module.exports = {
   getRoute,
   getTimeOffsetAlongPath,
+  getMarkersAlongPath,
 };
