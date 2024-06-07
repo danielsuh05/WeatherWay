@@ -4,8 +4,8 @@ const weatherController = require("express").Router();
 
 weatherController.get("/:latitude&:longitude&:time", async (req, res) => {
   let weather = await getWeatherAtPointTime(
-    req.params.latitude,
     req.params.longitude,
+    req.params.latitude,
     req.params.time
   );
 

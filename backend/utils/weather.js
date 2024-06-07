@@ -8,7 +8,7 @@ const baseURL =
  * @param {string} time time LOCALIZED to the specific (longitude, latitude). Should be in format yyyy-MM-ddTHH:mm
  * @returns {object} the data object with the respective data
  */
-let getWeatherAtPointTime = async (latitude, longitude, time) => {
+let getWeatherAtPointTime = async (longitude, latitude, time) => {
   const url = `${baseURL}&latitude=${latitude}&longitude=${longitude}`;
 
   const weather = await fetch(url)
@@ -16,6 +16,7 @@ let getWeatherAtPointTime = async (latitude, longitude, time) => {
       if (response.ok) {
         return response.json();
       }
+      console.log(response);
       throw new Error("Error getting data from weather API.");
     })
     .then((responseJSON) => {
