@@ -2,7 +2,7 @@ const { getWeatherAtPointTime } = require("../utils/weather");
 
 const weatherController = require("express").Router();
 
-weatherController.get("/:latitude&:longitude&:time", async (req, res) => {
+weatherController.get("/:longitude&:latitude&:time", async (req, res) => {
   let weather = await getWeatherAtPointTime(
     req.params.longitude,
     req.params.latitude,
@@ -18,7 +18,7 @@ weatherController.get("/:latitude&:longitude&:time", async (req, res) => {
       );
   }
 
-  res.send(weather);
+  res.json(weather);
 });
 
 module.exports = weatherController;

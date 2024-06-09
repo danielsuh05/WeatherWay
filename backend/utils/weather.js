@@ -9,21 +9,25 @@ const baseURL =
  * @returns {object} the data object with the respective data
  */
 let getWeatherAtPointTime = async (longitude, latitude, time) => {
+  console.log(time);
+  
   const url = `${baseURL}&latitude=${latitude}&longitude=${longitude}`;
+  console.log(url);
 
   const weather = await fetch(url)
     .then((response) => {
       if (response.ok) {
         return response.json();
       }
-      console.log(response);
-      throw new Error("Error getting data from weather API.");
+      console.log("Error getting data from weather API");
+      return;
     })
     .then((responseJSON) => {
       const timeID = responseJSON.hourly.time.findIndex((t) => t === time);
 
       if(timeID === -1) {
-        throw new Error("Error processing the date.")
+        console.log("Error processing the date.");
+        return;
       }
 
       const weatherObject = {
@@ -48,7 +52,8 @@ let getWeatherAtPointTime = async (longitude, latitude, time) => {
       return weatherObject;
     })
     .catch((error) => {
-      throw new Error(error);
+      console.log(error);
+      return;
     });
 
   return weather;
