@@ -45,6 +45,8 @@ let getMarkers = (routeGeometry) => {
   let distanceSum = 0;
   let ret = [];
 
+  ret.push(routeGeometry[0]);
+
   for (let i = 0; i < routeGeometry.length - 1; i++) {
     const point1 = routeGeometry[i],
       point2 = routeGeometry[i + 1];
@@ -63,6 +65,8 @@ let getMarkers = (routeGeometry) => {
     }
   }
 
+  ret.push(routeGeometry[routeGeometry.length - 1]);
+  
   return ret;
 };
 

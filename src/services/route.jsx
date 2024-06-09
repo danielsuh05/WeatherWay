@@ -6,6 +6,12 @@ const getRoute = (startLong, startLat, endLong, endLat) => {
   return request.then((response) => response.data);
 };
 
+const getMarkers = (startLong, startLat, endLong, endLat) => {
+  const request = axios.get(baseURL + `/markers/${startLong}&${startLat}&${endLong}&${endLat}`);
+  return request.then((response) => response.data);
+};
+
 export default {
-  getRoute
+  getRoute,
+  getMarkers
 };

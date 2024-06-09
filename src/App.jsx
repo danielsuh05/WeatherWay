@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from "react";
 import weatherService from "./services/weather";
 import routeService from "./services/route";
 import mapboxgl from "mapbox-gl";
+import { createRoot } from "react-dom/client";
 
 function App() {
   // useEffect(() => {
@@ -13,9 +14,14 @@ function App() {
 
   const mapContainer = useRef(null);
   const map = useRef(null);
-  const [lng, setLng] = useState(-70.9);
-  const [lat, setLat] = useState(42.35);
-  const [zoom, setZoom] = useState(9);
+  // const [lng, setLng] = useState(-98.5795);
+  // const [lat, setLat] = useState(39.8283);
+  // const [zoom, setZoom] = useState(3);
+  
+  // TODO: REMOVE, FOR TESTING PURPOSES
+  const [lng, setLng] = useState(-74.734749);
+  const [lat, setLat] = useState(41.70976);
+  const [zoom, setZoom] = useState(6);
 
   useEffect(() => {
     mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
@@ -34,7 +40,7 @@ function App() {
       setZoom(map.current.getZoom().toFixed(2));
     });
 
-    async function getRoute(start, end) {
+    let getRoute = async (start, end) => {
       const json = await routeService.getRoute(
         start[0],
         start[1],
@@ -76,39 +82,44 @@ function App() {
           },
         });
       }
-      // add turn instructions here at the end
-    }
+    };
+
+    let getDisplayMarkers = async (start, end) => {
+      const markers = await routeService.getMarkers(
+        start[0],
+        start[1],
+        end[0],
+        end[1]
+      );
+
+      let height = 20;
+      let width = 20;
+
+      console.log(markers);
+      markers.forEach((point) => {
+        const el = document.createElement("div");
+        el.className = "marker";
+        el.style.backgroundImage = `url(https://cdn-icons-png.freepik.com/512/25/25613.png)`;
+        el.style.width = `${height}px`;
+        el.style.height = `${width}px`;
+        el.style.backgroundSize = "100%";
+
+        const root = createRoot(el);
+        root.render(<div className="marker" />);
+
+        new mapboxgl.Marker(el).setLngLat(point).setOffset([0, -height / 2]).addTo(map.current);
+
+        console.log(point);
+
+      });
+    };
 
     map.current.on("load", () => {
       // make an initial directions request that
       // starts and ends at the same location
       getRoute([-74.864549, 42.632477], [-74.551546, 40.329155]);
+      getDisplayMarkers([-74.864549, 42.632477], [-74.551546, 40.329155]);
 
-      // Add starting point to the map
-      map.current.addLayer({
-        id: "point",
-        type: "circle",
-        source: {
-          type: "geojson",
-          data: {
-            type: "FeatureCollection",
-            features: [
-              {
-                type: "Feature",
-                properties: {},
-                geometry: {
-                  type: "Point",
-                  coordinates: [-74.864549, 42.632477],
-                },
-              },
-            ],
-          },
-        },
-        paint: {
-          "circle-radius": 10,
-          "circle-color": "#3887be",
-        },
-      });
       // this is where the code from the next step will go
     });
   });

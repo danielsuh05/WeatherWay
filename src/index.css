@@ -7,6 +7,7 @@
   left: 50%;
   top: 50%;
 
+  /* TODO: does it look better if it isn't 100% of the screen? */
   transform: translate(-50%, -50%);
   width: 100%;
   height: 100%;
