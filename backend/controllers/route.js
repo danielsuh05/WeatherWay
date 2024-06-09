@@ -20,8 +20,6 @@ routeController.get("/path/:startLong&:startLat&:endLong&:endLat", async (req, r
 routeController.get("/markers", async (req, res) => {
   let markers = await getMarkersAlongPath();
 
-  console.log(markers);
-
   if (markers === undefined) {
     res.status(202).send("Error getting data from API, check if longitude, latitude, and time are in range.")
   }

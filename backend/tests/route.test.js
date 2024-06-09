@@ -1,8 +1,8 @@
 const { describe, test, expect } = require("@jest/globals");
 const route = require("../utils/route");
 
-describe.only("getRoute", () => {
-  test.only("getRoute() random route", async () => {
+describe("getRoute", () => {
+  test("getRoute() random route", async () => {
     const r = await route.getRoute(
       -74.864549,
       42.632477,
@@ -14,9 +14,14 @@ describe.only("getRoute", () => {
   });
 
   test("getRoute() impossible route", async () => {
-    const r = async () => await route.getRoute(-74.864549, 42.632477, 74.551546, 40.329155);
+    const r = await route.getRoute(
+      -74.864549,
+      42.632477,
+      74.551546,
+      40.329155
+    );
 
-    expect(r).rejects.toThrowError();
+    expect(r).toBeUndefined();
   });
 
   test("getTimeAlongPath() early point", async() => {
@@ -53,7 +58,7 @@ describe.only("getRoute", () => {
       40.329155
     );
 
-    const t = () => route.getTimeOffsetAlongPath(74.55828, 40.332149);
-    expect(t).toThrowError();
+    const t = route.getTimeOffsetAlongPath(74.55828, 40.332149);
+    expect(t).toBeUndefined();
   })
 });
