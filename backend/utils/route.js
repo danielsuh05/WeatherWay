@@ -5,6 +5,9 @@ require("dotenv").config();
 
 const baseURL = "https://api.mapbox.com/directions/v5/mapbox/driving/";
 
+let savedRoute;
+let startCoord, endCoord;
+
 let constructURL = (startLong, startLat, endLong, endLat) => {
   return (
     baseURL +
@@ -66,7 +69,7 @@ let getMarkers = (routeGeometry) => {
   }
 
   ret.push(routeGeometry[routeGeometry.length - 1]);
-  
+
   return ret;
 };
 
@@ -76,53 +79,53 @@ let getMarkers = (routeGeometry) => {
  * @param {number} latitude latitude to get info from
  * @returns object containing LOCAL time when they will arrive along the path
  */
-let getTimeOffsetAlongPath = (longitude, latitude, routeString) => {
-  // TODO: optimize this with cache stuff
+let getTimeOffsetAlongPath = (longitude, latitude) => {
   let epsilonEqual = (a, b) => {
     return Math.abs(a - b) < utils.EPSILON;
   };
 
-  // we can use the cache results because `getRoute` will be called before this.
-  // TODO: FIX THE LOCALSTORAGE CACHE ISSUES
-  if (routeString) {
-    const route = JSON.parse(routeString);
+  const route = savedRoute;
+  const legs = route.routes[0].legs;
 
-    const legs = route.routes[0].legs;
+  let sumDurations = 0;
+  for (let i = 0; i < legs.length; i++) {
+    for (let j = 0; j < legs[i].steps.length; j++) {
+      const coordinates = legs[i].steps[j].geometry.coordinates;
+      let estDistance = 0;
+      const overallDistance = legs[i].steps[j].distance;
 
-    let sumDurations = 0;
-    for (let i = 0; i < legs.length; i++) {
-      for (let j = 0; j < legs[i].steps.length; j++) {
-        const coordinates = legs[i].steps[j].geometry.coordinates;
-        let curDistance = 0;
-        const overallDistance = legs[i].steps[j].distance;
-
-        for (let k = 0; k < coordinates.length; k++) {
-          if (k > 0) {
-            curDistance +=
-              latLongDistance(
-                coordinates[k][1],
-                coordinates[k][0],
-                coordinates[k - 1][1],
-                coordinates[k - 1][0]
-              ) * 1000; // convert to meters
-          }
-          if (
-            epsilonEqual(coordinates[k][0], longitude) &&
-            epsilonEqual(coordinates[k][1], latitude)
-          ) {
-            const t = curDistance / overallDistance;
-            return sumDurations + legs[i].steps[j].duration * t;
-          }
+      for (let k = 0; k < coordinates.length; k++) {
+        if (k > 0) {
+          estDistance +=
+            latLongDistance(
+              coordinates[k][1],
+              coordinates[k][0],
+              coordinates[k - 1][1],
+              coordinates[k - 1][0]
+            ) * 1000; // convert to meters
         }
-
-        sumDurations += legs[i].steps[j].duration;
+        if (
+          epsilonEqual(coordinates[k][0], longitude) &&
+          epsilonEqual(coordinates[k][1], latitude)
+        ) {
+          const t = estDistance / overallDistance;
+          return sumDurations + legs[i].steps[j].duration * t;
+        }
       }
+
+      sumDurations += legs[i].steps[j].duration;
     }
-  } else {
-    throw new Error("Error: route was not cached");
   }
 
-  throw new Error(`Coordinate ${longitude}, ${latitude} not found in steps.`);
+  if (longitude === startCoord[0] && latitude == startCoord[1]) {
+    return 0;
+  }
+
+  if (longitude === endCoord[0] && latitude == endCoord[1]) {
+    return sumDurations;
+  }
+
+  console.log(`Coordinate ${longitude}, ${latitude} not found in steps.`)
 };
 
 /**
@@ -142,20 +145,27 @@ let getRoute = async (startLong, startLat, endLong, endLat) => {
         return response.json();
       }
 
-      throw new Error(`Error fetching from route API: ${response}`);
+      console.log(`Error fetching from route API: ${response}`);
+      return;
     })
     .then((responseJSON) => {
       if (responseJSON.code !== "Ok") {
-        throw new Error(
-          `Error fetching from route API: ${responseJSON.message}`
-        );
+        console.log(`Error fetching from route API: ${responseJSON.message}`);
+        return;
       }
 
       return responseJSON;
     })
     .catch((error) => {
-      throw new Error(error);
+      console.log(error);
+      return;
     });
+
+  if (route) {
+    savedRoute = route;
+    startCoord = [startLong, startLat];
+    endCoord = [endLong, endLat];
+  }
 
   return route;
 };
@@ -168,33 +178,9 @@ let getRoute = async (startLong, startLat, endLong, endLat) => {
  * @param {number} endLat ending latitude
  * @returns markers along route from MapBox API
  */
-let getMarkersAlongPath = async (startLong, startLat, endLong, endLat) => {
-  const url = constructURL(startLong, startLat, endLong, endLat);
-
-  const route = await fetch(url)
-    .then((response) => {
-      if (response.ok) {
-        return response.json();
-      }
-
-      throw new Error(`Error fetching from route API: ${response}`);
-    })
-    .then((responseJSON) => {
-      if (responseJSON.code !== "Ok") {
-        throw new Error(
-          `Error fetching from route API: ${responseJSON.message}`
-        );
-      }
-
-      const markers = getMarkers(responseJSON.routes[0].geometry.coordinates);
-
-      return markers;
-    })
-    .catch((error) => {
-      throw new Error(error);
-    });
-
-  return route;
+let getMarkersAlongPath = async () => {
+  const markers = getMarkers(savedRoute.routes[0].geometry.coordinates);
+  return markers;
 };
 
 module.exports = {

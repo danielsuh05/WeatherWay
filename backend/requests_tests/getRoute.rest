@@ -1,0 +1,13 @@
+GET http://localhost:3001/api/route/path/-74.864549&42.632477&-74.551546&40.329155
+
+###
+GET http://localhost:3001/api/route/markers
+
+###
+GET http://localhost:3001/api/route/timeoffset/-74.864549&42.632477
+
+###
+GET http://localhost:3001/api/route/timeoffset/-74.551546&40.329155
+
+###
+GET http://localhost:3001/api/route/timeoffset/-74.55828&40.332149
