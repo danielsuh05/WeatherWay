@@ -2,7 +2,6 @@ import { useRef, useEffect, useState } from "react";
 import weatherService from "./services/weather";
 import routeService from "./services/route";
 import mapboxgl from "mapbox-gl";
-import { createRoot } from "react-dom/client";
 
 function App() {
   // useEffect(() => {
@@ -17,7 +16,7 @@ function App() {
   // const [lng, setLng] = useState(-98.5795);
   // const [lat, setLat] = useState(39.8283);
   // const [zoom, setZoom] = useState(3);
-  
+
   // TODO: REMOVE, FOR TESTING PURPOSES
   const [lng, setLng] = useState(-74.734749);
   const [lat, setLat] = useState(41.70976);
@@ -76,9 +75,9 @@ function App() {
             "line-cap": "round",
           },
           paint: {
-            "line-color": "#3887be",
-            "line-width": 5,
-            "line-opacity": 0.75,
+            "line-color": "#00539B",
+            "line-width": 8,
+            "line-opacity": 0.9,
           },
         });
       }
@@ -92,35 +91,66 @@ function App() {
         end[1]
       );
 
-      let height = 20;
-      let width = 20;
-
       console.log(markers);
-      markers.forEach((point) => {
-        const el = document.createElement("div");
-        el.className = "marker";
-        el.style.backgroundImage = `url(https://cdn-icons-png.freepik.com/512/25/25613.png)`;
-        el.style.width = `${height}px`;
-        el.style.height = `${width}px`;
-        el.style.backgroundSize = "100%";
-
-        const root = createRoot(el);
-        root.render(<div className="marker" />);
-
-        new mapboxgl.Marker(el).setLngLat(point).setOffset([0, -height / 2]).addTo(map.current);
-
-        console.log(point);
-
+      markers.forEach((point, i) => {
+        map.current.addLayer({
+          id: `marker${i}`,
+          type: "circle",
+          source: {
+            type: "geojson",
+            data: {
+              type: "FeatureCollection",
+              features: [
+                {
+                  type: "Feature",
+                  properties: {},
+                  geometry: {
+                    type: "Point",
+                    coordinates: point,
+                  },
+                },
+              ],
+            },
+          },
+          paint: {
+            "circle-radius": 20,
+            "circle-color": "red",
+          },
+        });
+        map.current.addLayer({
+          id: `text${i}`,
+          type: "symbol",
+          source: {
+            type: "geojson",
+            data: {
+              type: "FeatureCollection",
+              features: [
+                {
+                  type: "Feature",
+                  properties: {},
+                  geometry: {
+                    type: "Point",
+                    coordinates: point,
+                  },
+                },
+              ],
+            },
+          },
+          layout: {
+            "text-field": "96",
+            "text-justify": "center",
+          },
+        });
+        map.current.moveLayer(`marker${i}`);
+        map.current.moveLayer(`text${i}`);
       });
     };
 
     map.current.on("load", () => {
-      // make an initial directions request that
-      // starts and ends at the same location
-      getRoute([-74.864549, 42.632477], [-74.551546, 40.329155]);
-      getDisplayMarkers([-74.864549, 42.632477], [-74.551546, 40.329155]);
+      getRoute([-74.864549, 42.632477], [-74.551546, 40.329155]).then(() => {
+        getDisplayMarkers([-74.864549, 42.632477], [-74.551546, 40.329155]);
+      });
 
-      // this is where the code from the next step will go
     });
   });
 
