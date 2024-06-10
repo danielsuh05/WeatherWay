@@ -1,5 +1,7 @@
 const CheapRuler = require("cheap-ruler");
 const utils = require("../utils/utils");
+const { getWeatherAtPointTime } = require("./weather");
+const { DateTime } = require("luxon");
 
 require("dotenv").config();
 
@@ -34,7 +36,7 @@ let latLongDistance = (lat1, lon1, lat2, lon2) => {
  * @param {Array} routeGeometry array of points in the form of (longitude, latitude) that form the geometry of the path
  * @returns {Array} array of points (longitude, latitude) markers along the path
  */
-let getMarkers = (routeGeometry) => {
+let getMarkers = async (routeGeometry) => {
   let routeLength = 0;
   for (let i = 0; i < routeGeometry.length - 1; i++) {
     let point1 = routeGeometry[i],
@@ -46,10 +48,9 @@ let getMarkers = (routeGeometry) => {
   const distanceBetweenMarkers = routeLength / numMarkers;
 
   let distanceSum = 0;
-  let ret = [];
-
-  ret.push(routeGeometry[0]);
-
+  let points = [];
+  points.push(routeGeometry[0]);
+  
   for (let i = 0; i < routeGeometry.length - 1; i++) {
     const point1 = routeGeometry[i],
       point2 = routeGeometry[i + 1];
@@ -61,14 +62,22 @@ let getMarkers = (routeGeometry) => {
     );
 
     if (distanceSum + curDistance >= distanceBetweenMarkers) {
-      ret.push([point2[0], point2[1]]);
+      points.push([point2[0], point2[1]]);
       distanceSum = 0;
     } else {
       distanceSum += curDistance;
     }
   }
 
-  ret.push(routeGeometry[routeGeometry.length - 1]);
+  points.push(routeGeometry[routeGeometry.length - 1]);
+
+  let ret = [];
+  await Promise.all(points.map(async (point) => {
+    const time = DateTime.now().toFormat("yyyy-MM-dd'T'HH:'00'");
+    const weatherObj = await getWeatherAtPointTime(point[0], point[1], time);
+
+    ret.push({ point: point, weather: weatherObj }); 
+  }));
 
   return ret;
 };
@@ -125,7 +134,7 @@ let getTimeOffsetAlongPath = (longitude, latitude) => {
     return sumDurations;
   }
 
-  console.log(`Coordinate ${longitude}, ${latitude} not found in steps.`)
+  console.log(`Coordinate ${longitude}, ${latitude} not found in steps.`);
 };
 
 /**
@@ -179,7 +188,7 @@ let getRoute = async (startLong, startLat, endLong, endLat) => {
  * @returns markers along route from MapBox API
  */
 let getMarkersAlongPath = async () => {
-  const markers = getMarkers(savedRoute.routes[0].geometry.coordinates);
+  const markers = await getMarkers(savedRoute.routes[0].geometry.coordinates);
   return markers;
 };
 
