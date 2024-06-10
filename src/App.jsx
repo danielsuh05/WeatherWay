@@ -1,18 +1,9 @@
 import { useRef, useEffect, useState } from "react";
-import weatherService from "./services/weather";
 import routeService from "./services/route";
 import mapboxgl from "mapbox-gl";
 import Gradient from "javascript-color-gradient";
-import colorGradient from "javascript-color-gradient";
 
 function App() {
-  // useEffect(() => {
-  //   let time = "2024-06-07T23:00";
-  //   console.log(
-  //     weatherService.getWeatherAtPoint(30, 49, time).then((x) => console.log(x))
-  //   );
-  // });
-
   const mapContainer = useRef(null);
   const map = useRef(null);
   // const [lng, setLng] = useState(-98.5795);

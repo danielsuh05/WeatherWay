@@ -4,22 +4,30 @@ const { DateTime } = require("luxon");
 
 describe("getWeatherAtPointTime", () => {
   test("getWeatherAtPointTime test 00:00", async () => {
-    const date = DateTime.now().toFormat("yyyy-MM-dd'T'HH:'00'");
-    const weather = await getWeatherAtPointTime(-74.0060, 40.7128, date);
+    // TODO MAKE THESE DYNAMIC SO THAT IF ROUTE CHANGES I DON'T HAVE TO REDO ALL
+    const date = DateTime.now();
+    const weather = await getWeatherAtPointTime(-75.143966, 42.260483, date);
 
     expect(weather).toBeDefined();
   });
   
-  test("getWeatherAtPointTime test 97:00", async () => {
-    const date = DateTime.now().toFormat("yyyy-MM-dd'T''97':'00'");
-    const weather = await getWeatherAtPointTime(-74.0060, 40.7128, date);
+  test("getWeatherAtPointTime test impossible", async () => {
+    const date = DateTime.now().plus({hours: 2349234});
+    const weather = await getWeatherAtPointTime(-75.143966, 42.260483, date);
 
     expect(weather).toBeUndefined();
   });
+
+  test("getWeatherAtPointTime test interpolate", async () => {
+    const date = DateTime.now().plus({seconds: 10000});
+    const weather = await getWeatherAtPointTime(-75.143966, 42.260483, date);
+
+    expect(weather).toBeDefined();
+  });
   
-  test("getWeatherAtPointTime test 23:00", async () => {
-    const date = DateTime.now().toFormat("yyyy-MM-dd'T''23':'00'");
-    const weather = await getWeatherAtPointTime(-74.0060, 40.7128, date);
+  test("getWeatherAtPointTime test later", async () => {
+    const date = DateTime.now().plus({hours: 3});
+    const weather = await getWeatherAtPointTime(-75.143966, 42.260483, date);
 
     expect(weather).toBeDefined();
   });

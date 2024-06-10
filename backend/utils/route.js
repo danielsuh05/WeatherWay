@@ -50,18 +50,21 @@ let getMarkers = async () => {
   const len = turf.length(line, options);
   const numMarkers = Math.max(5, len / 150);
   const multiplier = len / 150 >= 5 ? 150 : len / 5;
-  
-  for(let i = 1; i < numMarkers; i += 1) {
+
+  for (let i = 1; i < numMarkers; i += 1) {
     points.push(turf.along(line, i * multiplier, options).geometry.coordinates);
   }
-  
+
   points.push(endCoord);
 
   let ret = [];
 
   await Promise.all(
     points.map(async (point) => {
-      const time = DateTime.now().toFormat("yyyy-MM-dd'T'HH:'00'");
+      // TODO: if users want to change the time, then just change it here
+      const time = DateTime.now().plus({
+        seconds: getTimeOffsetAlongPath(point[0], point[1]),
+      });
       const weatherObj = await getWeatherAtPointTime(point[0], point[1], time);
 
       ret.push({ point: point, weather: weatherObj });
@@ -75,24 +78,23 @@ let getMarkers = async () => {
  * Gets the LOCAL time along the route. `getRoute` will always be called before this method is run.
  * @param {number} longitude longitude to get info from
  * @param {number} latitude latitude to get info from
- * @returns object containing LOCAL time when they will arrive along the path
+ * @returns {number} how long it will take to get to that point along the route
  */
 let getTimeOffsetAlongPath = (longitude, latitude) => {
-  let epsilonEqual = (a, b) => {
-    return Math.abs(a - b) < utils.EPSILON;
-  };
-
   const route = savedRoute;
   const legs = route.routes[0].legs;
+  const pt = turf.point([longitude, latitude]);
 
   let sumDurations = 0;
   for (let i = 0; i < legs.length; i++) {
     for (let j = 0; j < legs[i].steps.length; j++) {
       const coordinates = legs[i].steps[j].geometry.coordinates;
-      let estDistance = 0;
       const overallDistance = legs[i].steps[j].distance;
 
+      let estDistance = 0; // used for interpolation
+
       for (let k = 0; k < coordinates.length; k++) {
+        let onLine = false;
         if (k > 0) {
           estDistance +=
             latLongDistance(
@@ -100,12 +102,16 @@ let getTimeOffsetAlongPath = (longitude, latitude) => {
               coordinates[k][0],
               coordinates[k - 1][1],
               coordinates[k - 1][0]
-            ) * 1000; // convert to meters
+            ) * 1000;
+
+          const line = turf.lineString([
+            [coordinates[k][0], coordinates[k][1]],
+            [coordinates[k - 1][0], coordinates[k - 1][1]],
+          ]);
+
+          onLine = turf.booleanPointOnLine(pt, line, { epsilon: 1e-5 });
         }
-        if (
-          epsilonEqual(coordinates[k][0], longitude) &&
-          epsilonEqual(coordinates[k][1], latitude)
-        ) {
+        if (onLine) {
           const t = estDistance / overallDistance;
           return sumDurations + legs[i].steps[j].duration * t;
         }
