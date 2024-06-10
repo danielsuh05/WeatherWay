@@ -72,6 +72,7 @@ let getMarkers = async (routeGeometry) => {
   points.push(routeGeometry[routeGeometry.length - 1]);
 
   let ret = [];
+  
   await Promise.all(points.map(async (point) => {
     const time = DateTime.now().toFormat("yyyy-MM-dd'T'HH:'00'");
     const weatherObj = await getWeatherAtPointTime(point[0], point[1], time);

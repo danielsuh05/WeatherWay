@@ -6,12 +6,18 @@ const getRoute = (startLong, startLat, endLong, endLat) => {
   return request.then((response) => response.data);
 };
 
-const getMarkers = (startLong, startLat, endLong, endLat) => {
-  const request = axios.get(baseURL + `/markers/${startLong}&${startLat}&${endLong}&${endLat}`);
+const getMarkers = () => {
+  const request = axios.get(baseURL + "/markers");
   return request.then((response) => response.data);
 };
 
+const getTimeOffset = (long, lat) => {
+    const request = axios.get(baseURL + `/timeoffset/${long}&${lat}`)
+    return request.then((response) => response.data);
+}
+
 export default {
   getRoute,
-  getMarkers
+  getMarkers,
+  getTimeOffset
 };

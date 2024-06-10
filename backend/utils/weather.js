@@ -13,6 +13,7 @@ let getWeatherScore = (weatherObject) => {
  * @returns {object} the data object with the respective data
  */
 let getWeatherAtPointTime = async (longitude, latitude, time) => {
+  // TODO: there's a bottleneck here with the API, possibly fix later
   const url = `${baseURL}&latitude=${latitude}&longitude=${longitude}`;
 
   const weather = await fetch(url)

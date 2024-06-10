@@ -2,6 +2,8 @@ import { useRef, useEffect, useState } from "react";
 import weatherService from "./services/weather";
 import routeService from "./services/route";
 import mapboxgl from "mapbox-gl";
+import Gradient from "javascript-color-gradient";
+import colorGradient from "javascript-color-gradient";
 
 function App() {
   // useEffect(() => {
@@ -57,12 +59,9 @@ function App() {
           coordinates: route,
         },
       };
-      // if the route already exists on the map, we'll reset it using setData
       if (map.current.getSource("route")) {
         map.current.getSource("route").setData(geojson);
-      }
-      // otherwise, we'll make a new request
-      else {
+      } else {
         map.current.addLayer({
           id: "route",
           type: "line",
@@ -83,16 +82,15 @@ function App() {
       }
     };
 
-    let getDisplayMarkers = async (start, end) => {
-      const markers = await routeService.getMarkers(
-        start[0],
-        start[1],
-        end[0],
-        end[1]
-      );
+    let getDisplayMarkers = async () => {
+      const gradientArray = new Gradient()
+        .setColorGradient("#ff5f58", "#ffffff", "#28c840")
+        .setMidpoint(101)
+        .getColors();
 
-      console.log(markers);
-      markers.forEach((point, i) => {
+      const markers = await routeService.getMarkers();
+
+      markers.forEach((obj, i) => {
         map.current.addLayer({
           id: `marker${i}`,
           type: "circle",
@@ -106,7 +104,7 @@ function App() {
                   properties: {},
                   geometry: {
                     type: "Point",
-                    coordinates: point,
+                    coordinates: obj.point,
                   },
                 },
               ],
@@ -114,7 +112,7 @@ function App() {
           },
           paint: {
             "circle-radius": 20,
-            "circle-color": "red",
+            "circle-color": gradientArray[obj.weather.weatherScore],
           },
         });
         map.current.addLayer({
@@ -130,14 +128,14 @@ function App() {
                   properties: {},
                   geometry: {
                     type: "Point",
-                    coordinates: point,
+                    coordinates: obj.point,
                   },
                 },
               ],
             },
           },
           layout: {
-            "text-field": "96",
+            "text-field": `${obj.weather.weatherScore}`,
             "text-justify": "center",
           },
         });
@@ -147,10 +145,12 @@ function App() {
     };
 
     map.current.on("load", () => {
-      getRoute([-74.864549, 42.632477], [-74.551546, 40.329155]).then(() => {
-        getDisplayMarkers([-74.864549, 42.632477], [-74.551546, 40.329155]);
+      const point1 = [-74.864549, 42.632477];
+      // const point2 = [-74.551546, 40.329155]
+      const point2 = [-118.2426, 34.0549];
+      getRoute(point1, point2).then(() => {
+        getDisplayMarkers(point1, point2);
       });
-
     });
   });
 
