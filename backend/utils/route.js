@@ -2,6 +2,7 @@ const CheapRuler = require("cheap-ruler");
 const utils = require("../utils/utils");
 const { getWeatherAtPointTime } = require("./weather");
 const { DateTime } = require("luxon");
+const turf = require("@turf/turf");
 
 require("dotenv").config();
 
@@ -36,49 +37,36 @@ let latLongDistance = (lat1, lon1, lat2, lon2) => {
  * @param {Array} routeGeometry array of points in the form of (longitude, latitude) that form the geometry of the path
  * @returns {Array} array of points (longitude, latitude) markers along the path
  */
-let getMarkers = async (routeGeometry) => {
-  let routeLength = 0;
-  for (let i = 0; i < routeGeometry.length - 1; i++) {
-    let point1 = routeGeometry[i],
-      point2 = routeGeometry[i + 1];
-    routeLength += latLongDistance(point1[0], point1[1], point2[0], point2[1]);
-  }
+let getMarkers = async () => {
+  const route = savedRoute;
+  const line = turf.lineString(route.routes[0].geometry.coordinates);
 
-  const numMarkers = Math.max(5, Math.floor(routeLength / 100)); // assuming ~100 km/h for long drives
-  const distanceBetweenMarkers = routeLength / numMarkers;
-
-  let distanceSum = 0;
   let points = [];
-  points.push(routeGeometry[0]);
+
+  var options = { units: "kilometers" };
+
+  points.push(startCoord);
+
+  const len = turf.length(line, options);
+  const numMarkers = Math.max(5, len / 150);
+  const multiplier = len / 150 >= 5 ? 150 : len / 5;
   
-  for (let i = 0; i < routeGeometry.length - 1; i++) {
-    const point1 = routeGeometry[i],
-      point2 = routeGeometry[i + 1];
-    const curDistance = latLongDistance(
-      point1[0],
-      point1[1],
-      point2[0],
-      point2[1]
-    );
-
-    if (distanceSum + curDistance >= distanceBetweenMarkers) {
-      points.push([point2[0], point2[1]]);
-      distanceSum = 0;
-    } else {
-      distanceSum += curDistance;
-    }
+  for(let i = 1; i < numMarkers; i += 1) {
+    points.push(turf.along(line, i * multiplier, options).geometry.coordinates);
   }
-
-  points.push(routeGeometry[routeGeometry.length - 1]);
+  
+  points.push(endCoord);
 
   let ret = [];
-  
-  await Promise.all(points.map(async (point) => {
-    const time = DateTime.now().toFormat("yyyy-MM-dd'T'HH:'00'");
-    const weatherObj = await getWeatherAtPointTime(point[0], point[1], time);
 
-    ret.push({ point: point, weather: weatherObj }); 
-  }));
+  await Promise.all(
+    points.map(async (point) => {
+      const time = DateTime.now().toFormat("yyyy-MM-dd'T'HH:'00'");
+      const weatherObj = await getWeatherAtPointTime(point[0], point[1], time);
+
+      ret.push({ point: point, weather: weatherObj });
+    })
+  );
 
   return ret;
 };
@@ -189,7 +177,7 @@ let getRoute = async (startLong, startLat, endLong, endLat) => {
  * @returns markers along route from MapBox API
  */
 let getMarkersAlongPath = async () => {
-  const markers = await getMarkers(savedRoute.routes[0].geometry.coordinates);
+  const markers = await getMarkers();
   return markers;
 };
 

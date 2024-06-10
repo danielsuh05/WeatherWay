@@ -146,8 +146,8 @@ function App() {
 
     map.current.on("load", () => {
       const point1 = [-74.864549, 42.632477];
-      // const point2 = [-74.551546, 40.329155]
-      const point2 = [-118.2426, 34.0549];
+      const point2 = [-74.551546, 40.329155]
+      // const point2 = [-118.2426, 34.0549];
       getRoute(point1, point2).then(() => {
         getDisplayMarkers(point1, point2);
       });
