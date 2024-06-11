@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from "react";
 import routeService from "./services/route";
+import geocodeService from "./services/geocode";
 import mapboxgl from "mapbox-gl";
 import Gradient from "javascript-color-gradient";
 import { DateTime } from "luxon";
@@ -65,7 +66,7 @@ function App() {
         ).toLocaleString(DateTime.DATETIME_MED);
       }
       if (key === "is_day") {
-        return obj.weather.weatherDetails[key] === 1 ? "Day" : "Night";
+        return obj.weather.weatherDetails[key] === 1 ? "Day (0)" : "Night (-10)";
       }
       let unit = "";
       if (key === "temperature_2m") {
@@ -93,7 +94,10 @@ function App() {
       return (
         Number(obj.weather.weatherDetails[key]).toFixed(2).toString() +
         " " +
-        unit
+        unit + 
+        " (" + 
+        Number(obj.weather.weatherScore.contributions[key]).toFixed(0).toString() + 
+        ")"
       );
     };
 
@@ -172,21 +176,25 @@ function App() {
           },
         });
 
-        map.current.on("click", `marker${i}`, (e) => {
+        map.current.on("click", `marker${i}`, async (e) => {
           const coordinates = e.features[0].geometry.coordinates.slice();
 
           while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
             coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
           }
 
-          // TODO: make it show where you just clicked
+          const location = await geocodeService.getReverseGeocode(
+            coordinates[0],
+            coordinates[1]
+          );
+
           new mapboxgl.Popup()
             .setLngLat(coordinates)
             .setHTML(
               `
               <div class="popup-content">
                 <div class="popup-header">
-                  <h3>Weather Information</h3>
+                  <h3>Weather Information for ${location}</h3>
                 </div>
                 <div class="popup-body">
                   <table>
@@ -209,7 +217,6 @@ function App() {
           map.current.getCanvas().style.cursor = "pointer";
         });
 
-        // Change it back to a pointer when it leaves.
         map.current.on("mouseleave", `marker${i}`, () => {
           map.current.getCanvas().style.cursor = "";
         });
@@ -244,6 +251,7 @@ function App() {
     };
 
     map.current.on("load", () => {
+      // TODO: remove later
       const point1 = [-74.864549, 42.632477];
       const point2 = [-74.551546, 40.329155];
       // const point2 = [-118.2426, 34.0549];

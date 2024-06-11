@@ -137,7 +137,7 @@ let getWeatherAtPointTime = async (longitude, latitude, time) => {
     };
   };
 
-  // TODO: there's a bottleneck here with the API, possibly fix later
+  // TODO: there's a bottleneck here with the API, possibly fix with one weather API call
   const url = `${baseURL}&latitude=${latitude}&longitude=${longitude}`;
 
   const weather = await fetch(url)

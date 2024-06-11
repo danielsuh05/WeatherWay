@@ -4,7 +4,6 @@ const { DateTime } = require("luxon");
 
 describe("getWeatherAtPointTime", () => {
   test("getWeatherAtPointTime test 00:00", async () => {
-    // TODO MAKE THESE DYNAMIC SO THAT IF ROUTE CHANGES I DON'T HAVE TO REDO ALL
     const date = DateTime.now();
     const weather = await getWeatherAtPointTime(-75.143966, 42.260483, date);
 
