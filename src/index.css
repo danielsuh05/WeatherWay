@@ -26,9 +26,9 @@
 .mapboxgl-popup-content {
   text-align: center;
   font-family: 'Open Sans', sans-serif;
-  background-color:rgba(255, 255, 255, 0.7);
+  background-color:rgba(255, 255, 255, 0.9);
 }
 
 .mapboxgl-popup-tip {
-  opacity: 0.7;
+  opacity: 0.9;
 }

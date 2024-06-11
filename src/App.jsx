@@ -37,18 +37,18 @@ function App() {
       timezone: "Timezone",
       time: "Local Time",
       temperature_2m: "Temperature",
-      precipitation_probability: "Precipitation %",
+      precipitation_probability: "Precipitation Percentage",
       precipitation: "Precipitation",
       rain: "Rainfall",
       showers: "Showers",
       snowfall: "Snowfall",
       snow_depth: "Snow Depth",
-      cloud_cover: "Cloud Cover %",
+      cloud_cover: "Cloud Cover Percentage",
       visibility: "Visibility",
       wind_speed_10m: "Wind speed",
       wind_gusts_10m: "Wind gusts",
       uv_index: "UV Index",
-      is_day: "Is night",
+      is_day: "Time of Day",
     };
 
     let formatWeatherValues = (key, obj) => {
@@ -61,7 +61,27 @@ function App() {
         console.log(obj.weather.weatherDetails[key])
         return DateTime.fromFormat(obj.weather.weatherDetails[key], "yyyy-MM-dd'T'HH:mm:ss'.'SSSZZ").toLocaleString(DateTime.DATETIME_MED);
       }
-      // obj.weather.weatherScore.contributions[k]
+      if(key === "is_day") {
+        return obj.weather.weatherDetails[key] === 1 ? "Day" : "Night";
+      }
+      let unit = "";
+      if(key === "temperature_2m") {
+        unit = "°F";
+      }
+      if(key === "precipitation_probability" || key === "cloud_cover") {
+        unit = "%";
+      }
+      if(key === "precipitation" || key === "rain" || key === "showers" || key === "snowfall" || key === "snow_depth") {
+        unit = "in";
+      }
+      if(key === "visibility") {
+        unit = "ft";
+      }
+      if(key === "wind_speed_10m" || key === "wind_gusts_10m") {
+        unit = "mp/h";
+      }
+
+      return Number(obj.weather.weatherDetails[key]).toFixed(2).toString() + " " + unit;
     };
 
     let getRoute = async (start, end) => {
@@ -152,7 +172,8 @@ function App() {
               Object.keys(obj.weather.weatherScore.contributions)
                 .map((k) => {
                   let f = formatWeatherValues(k, obj);
-                  return f !== undefined ? `<p key=${Math.random() * 10000000}>${f}</p>` : "";
+                  let name = formatDict[k];
+                  return f !== undefined ? `<p key=${Math.random() * 10000000}>${name}: ${f}</p>` : "";
                 })
                 .join("")
             )
