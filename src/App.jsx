@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from "react";
 import routeService from "./services/route";
 import mapboxgl from "mapbox-gl";
 import Gradient from "javascript-color-gradient";
+import { DateTime } from "luxon";
 
 function App() {
   const mapContainer = useRef(null);
@@ -31,6 +32,37 @@ function App() {
       setLat(map.current.getCenter().lat.toFixed(4));
       setZoom(map.current.getZoom().toFixed(2));
     });
+
+    const formatDict = {
+      timezone: "Timezone",
+      time: "Local Time",
+      temperature_2m: "Temperature",
+      precipitation_probability: "Precipitation %",
+      precipitation: "Precipitation",
+      rain: "Rainfall",
+      showers: "Showers",
+      snowfall: "Snowfall",
+      snow_depth: "Snow Depth",
+      cloud_cover: "Cloud Cover %",
+      visibility: "Visibility",
+      wind_speed_10m: "Wind speed",
+      wind_gusts_10m: "Wind gusts",
+      uv_index: "UV Index",
+      is_day: "Is night",
+    };
+
+    let formatWeatherValues = (key, obj) => {
+      // console.log(obj);
+      // return obj.weather.weatherDetails[key];
+      if(key === "timezone") {
+        return obj.weather.weatherDetails[key];
+      }
+      if(key === "time") {
+        console.log(obj.weather.weatherDetails[key])
+        return DateTime.fromFormat(obj.weather.weatherDetails[key], "yyyy-MM-dd'T'HH:mm:ss'.'SSSZZ").toLocaleString(DateTime.DATETIME_MED);
+      }
+      // obj.weather.weatherScore.contributions[k]
+    };
 
     let getRoute = async (start, end) => {
       const json = await routeService.getRoute(
@@ -75,7 +107,7 @@ function App() {
 
     let getDisplayMarkers = async () => {
       const gradientArray = new Gradient()
-        .setColorGradient("#ff5f58", "#ffffff", "#28c840")
+        .setColorGradient("#ff5f58", "#ffbc2e", "#28c840")
         .setMidpoint(101)
         .getColors();
 
@@ -116,9 +148,14 @@ function App() {
 
           new mapboxgl.Popup()
             .setLngLat(coordinates)
-            .setHTML(Object.keys(obj.weather.weatherScore.contributions).map(k => {
-              return `<p key=${Math.random() * 1000000}>${k}: ${obj.weather.weatherDetails[k]} ${obj.weather.weatherScore.contributions[k]}</p>`
-            }).join(''))
+            .setHTML(
+              Object.keys(obj.weather.weatherScore.contributions)
+                .map((k) => {
+                  let f = formatWeatherValues(k, obj);
+                  return f !== undefined ? `<p key=${Math.random() * 10000000}>${f}</p>` : "";
+                })
+                .join("")
+            )
             .addTo(map.current);
         });
 
@@ -162,8 +199,9 @@ function App() {
 
     map.current.on("load", () => {
       const point1 = [-74.864549, 42.632477];
-      // const point2 = [-74.551546, 40.329155];
-      const point2 = [-118.2426, 34.0549];
+      const point2 = [-74.551546, 40.329155];
+      // const point2 = [-118.2426, 34.0549];
+      // const point2 = [-149.8997, 61.2176];
       getRoute(point1, point2).then(() => {
         getDisplayMarkers(point1, point2);
       });

@@ -58,6 +58,7 @@ let getMarkers = async () => {
 
   let ret = [];
 
+  // TODO: convert this into one api call into separate ones to not get limited
   await Promise.all(
     points.map(async (point) => {
       // TODO: if users want to change the time, then just change it here

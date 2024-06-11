@@ -1,5 +1,5 @@
 const baseURL =
-  "https://api.open-meteo.com/v1/forecast?&hourly=temperature_2m,precipitation_probability,precipitation,rain,showers,snowfall,snow_depth,cloud_cover,visibility,wind_speed_10m,wind_gusts_10m,uv_index,is_day&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=2";
+  "https://api.open-meteo.com/v1/forecast?&hourly=temperature_2m,precipitation_probability,precipitation,rain,showers,snowfall,snow_depth,cloud_cover,visibility,wind_speed_10m,wind_gusts_10m,uv_index,is_day&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=7";
 
 let getWeatherScore = (weatherObject) => {
   let normalize = (value, avgRange, dangerousRange, safeRange) => {
@@ -22,14 +22,14 @@ let getWeatherScore = (weatherObject) => {
 
   const weights = {
     temperature_2m: 0.05,
-    precipitation_probability: 0.15,
-    precipitation: 0.15,
-    rain: 0.1,
-    showers: 0.1,
-    snowfall: 0.2,
-    snow_depth: 0.2,
-    cloud_cover: 0.025,
-    visibility: 0.2, // better if higher
+    precipitation_probability: 0.2,
+    precipitation: 0.5,
+    rain: 0.25,
+    showers: 0.25,
+    snowfall: 0.25,
+    snow_depth: 0.25,
+    cloud_cover: 0.05,
+    visibility: 0.5, // better if higher
     wind_speed_10m: 0.05,
     wind_gusts_10m: 0.05,
     uv_index: 0.001,
@@ -60,17 +60,16 @@ let getWeatherScore = (weatherObject) => {
     snow_depth: [4, 100],
     cloud_cover: [50, 100],
     visibility: [0, 2000],
-    wind_speed_10m: [0, 100],
-    wind_gusts_10m: [0, 100],
-    uv_index: [0, 10],
+    wind_speed_10m: [30, 100],
+    wind_gusts_10m: [45, 100],
     is_day: [-0.1, 0.5]
   };
 
   const safeRanges = {
     temperature_2m: [40, 90],
     cloud_cover: [0, 10],
-    wind_speed_10m: [0, 13],
-    wind_gusts_10m: [0, 25],
+    wind_speed_10m: [0, 25],
+    wind_gusts_10m: [0, 35],
     uv_index: [0, 9],
     visibility: [3000, 100000000],
     is_day: [0.5, 1.1]
@@ -154,6 +153,7 @@ let getWeatherAtPointTime = async (longitude, latitude, time) => {
       const timeID = responseJSON.hourly.time.findIndex((t) => t === findTime);
 
       if (timeID === -1) {
+        console.log(findTime);
         console.log("Error processing the date.");
         return;
       }
