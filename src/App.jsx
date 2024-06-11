@@ -103,9 +103,34 @@ function App() {
           },
           paint: {
             "circle-radius": 20,
-            "circle-color": gradientArray[obj.weather.weatherScore],
+            "circle-color": gradientArray[obj.weather.weatherScore.score],
           },
         });
+
+        map.current.on("click", `marker${i}`, (e) => {
+          const coordinates = e.features[0].geometry.coordinates.slice();
+
+          while (Math.abs(e.lngLat.lng - coordinates[0]) > 180) {
+            coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
+          }
+
+          new mapboxgl.Popup()
+            .setLngLat(coordinates)
+            .setHTML(Object.keys(obj.weather.weatherScore.contributions).map(k => {
+              return `<p key=${Math.random() * 1000000}>${k}: ${obj.weather.weatherDetails[k]} ${obj.weather.weatherScore.contributions[k]}</p>`
+            }).join(''))
+            .addTo(map.current);
+        });
+
+        map.current.on("mouseenter", `marker${i}`, () => {
+          map.current.getCanvas().style.cursor = "pointer";
+        });
+
+        // Change it back to a pointer when it leaves.
+        map.current.on("mouseleave", `marker${i}`, () => {
+          map.current.getCanvas().style.cursor = "";
+        });
+
         map.current.addLayer({
           id: `text${i}`,
           type: "symbol",
@@ -126,7 +151,7 @@ function App() {
             },
           },
           layout: {
-            "text-field": `${obj.weather.weatherScore}`,
+            "text-field": `${obj.weather.weatherScore.score}`,
             "text-justify": "center",
           },
         });
@@ -137,8 +162,8 @@ function App() {
 
     map.current.on("load", () => {
       const point1 = [-74.864549, 42.632477];
-      const point2 = [-74.551546, 40.329155]
-      // const point2 = [-118.2426, 34.0549];
+      // const point2 = [-74.551546, 40.329155];
+      const point2 = [-118.2426, 34.0549];
       getRoute(point1, point2).then(() => {
         getDisplayMarkers(point1, point2);
       });

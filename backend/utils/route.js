@@ -1,5 +1,4 @@
 const CheapRuler = require("cheap-ruler");
-const utils = require("../utils/utils");
 const { getWeatherAtPointTime } = require("./weather");
 const { DateTime } = require("luxon");
 const turf = require("@turf/turf");

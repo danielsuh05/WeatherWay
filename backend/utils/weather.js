@@ -2,7 +2,111 @@ const baseURL =
   "https://api.open-meteo.com/v1/forecast?&hourly=temperature_2m,precipitation_probability,precipitation,rain,showers,snowfall,snow_depth,cloud_cover,visibility,wind_speed_10m,wind_gusts_10m,uv_index,is_day&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=2";
 
 let getWeatherScore = (weatherObject) => {
-  return Math.floor(Math.random() * 101);
+  let normalize = (value, avgRange, dangerousRange, safeRange) => {
+    if (
+      dangerousRange !== undefined &&
+      value >= dangerousRange[0] &&
+      value <= dangerousRange[1]
+    ) {
+      return 1;
+    }
+    if (
+      safeRange !== undefined &&
+      value >= safeRange[0] &&
+      value <= safeRange[1]
+    ) {
+      return 0;
+    }
+    return (value - avgRange[0]) / (avgRange[1] - avgRange[0]);
+  };
+
+  const weights = {
+    temperature_2m: 0.05,
+    precipitation_probability: 0.15,
+    precipitation: 0.15,
+    rain: 0.1,
+    showers: 0.1,
+    snowfall: 0.2,
+    snow_depth: 0.2,
+    cloud_cover: 0.025,
+    visibility: 0.2, // better if higher
+    wind_speed_10m: 0.05,
+    wind_gusts_10m: 0.05,
+    uv_index: 0.001,
+    is_day: 0.1,
+  };
+
+  const minMaxValues = {
+    temperature_2m: [-22, 122],
+    precipitation_probability: [0, 100],
+    precipitation: [0, 4],
+    rain: [0, 4],
+    showers: [0, 4],
+    snowfall: [0, 2],
+    snow_depth: [0, 10],
+    cloud_cover: [0, 100],
+    visibility: [0, 100000],
+    wind_speed_10m: [0, 100],
+    wind_gusts_10m: [0, 100],
+    uv_index: [0, 10],
+    is_day: [0, 1],
+  };
+
+  const dangerousRanges = {
+    precipitation: [4, 100],
+    rain: [2, 100],
+    showers: [2, 100],
+    snowfall: [1, 100],
+    snow_depth: [4, 100],
+    cloud_cover: [50, 100],
+    visibility: [0, 2000],
+    wind_speed_10m: [0, 100],
+    wind_gusts_10m: [0, 100],
+    uv_index: [0, 10],
+    is_day: [-0.1, 0.5]
+  };
+
+  const safeRanges = {
+    temperature_2m: [40, 90],
+    cloud_cover: [0, 10],
+    wind_speed_10m: [0, 13],
+    wind_gusts_10m: [0, 25],
+    uv_index: [0, 9],
+    visibility: [3000, 100000000],
+    is_day: [0.5, 1.1]
+  };
+
+  let normalizedScores = {};
+  for (let key in weights) {
+    if (key === "time" || key === "timezone") {
+      continue;
+    }
+    normalizedScores[key] = normalize(
+      weatherObject[key],
+      minMaxValues[key],
+      dangerousRanges[key],
+      safeRanges[key]
+    );
+  }
+
+  let safetyScore = 1;
+
+  let safetyObj = {};
+
+  for (let key in weatherObject) {
+    if (key === "time" || key === "timezone") {
+      safetyObj[key] = weatherObject[key];
+      continue;
+    }
+    safetyScore -= normalizedScores[key] * weights[key];
+    safetyObj[key] = -normalizedScores[key] * weights[key] * 100;
+  }
+
+  safetyScore = safetyScore * 100;
+  return {
+    score: Math.floor(Math.min(Math.max(0, safetyScore), 100)),
+    contributions: safetyObj,
+  };
 };
 
 /**
@@ -16,21 +120,21 @@ let getWeatherAtPointTime = async (longitude, latitude, time) => {
   let createWeatherObject = (responseJSON, timeID) => {
     return {
       timezone: responseJSON.timezone,
-      time: responseJSON.hourly.time[timeID],
-      temperature_2m: responseJSON.hourly.temperature_2m[timeID],
+      time: responseJSON.hourly.time[timeID], // iso8601
+      temperature_2m: responseJSON.hourly.temperature_2m[timeID], // F
       precipitation_probability:
-        responseJSON.hourly.precipitation_probability[timeID],
-      precipitation: responseJSON.hourly.precipitation[timeID],
-      rain: responseJSON.hourly.rain[timeID],
-      showers: responseJSON.hourly.showers[timeID],
-      snowfall: responseJSON.hourly.snowfall[timeID],
-      snow_depth: responseJSON.hourly.snow_depth[timeID],
-      cloud_cover: responseJSON.hourly.cloud_cover[timeID],
-      visibility: responseJSON.hourly.visibility[timeID],
-      wind_speed_10m: responseJSON.hourly.wind_speed_10m[timeID],
-      wind_gusts_10m: responseJSON.hourly.wind_gusts_10m[timeID],
-      uv_index: responseJSON.hourly.uv_index[timeID],
-      is_day: responseJSON.hourly.is_day[timeID],
+        responseJSON.hourly.precipitation_probability[timeID], // %
+      precipitation: responseJSON.hourly.precipitation[timeID], // in
+      rain: responseJSON.hourly.rain[timeID], // in
+      showers: responseJSON.hourly.showers[timeID], // in
+      snowfall: responseJSON.hourly.snowfall[timeID], // in
+      snow_depth: responseJSON.hourly.snow_depth[timeID], // in
+      cloud_cover: responseJSON.hourly.cloud_cover[timeID], // %
+      visibility: responseJSON.hourly.visibility[timeID], // ft
+      wind_speed_10m: responseJSON.hourly.wind_speed_10m[timeID], // mp/h
+      wind_gusts_10m: responseJSON.hourly.wind_gusts_10m[timeID], // mp/h
+      uv_index: responseJSON.hourly.uv_index[timeID], // uv value
+      is_day: responseJSON.hourly.is_day[timeID], // 1 = day, 0 = night
     };
   };
 
@@ -59,17 +163,18 @@ let getWeatherAtPointTime = async (longitude, latitude, time) => {
 
       const t = time.minute / 60;
 
+      // interpolate between beginWeather and endWeather using simple lerp
       const weatherObject = Object.keys(beginWeather).reduce((a, k) => {
-        if(k === "timezone") {
+        if (k === "timezone") {
           a[k] = beginWeather[k];
           return a;
-        } else if(k === "time") {
+        } else if (k === "time") {
           a[k] = time.toString();
           return a;
         }
         a[k] = beginWeather[k] + (endWeather[k] - beginWeather[k]) * t;
         return a;
-      }, {})
+      }, {});
 
       const score = getWeatherScore(weatherObject);
 
