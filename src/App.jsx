@@ -34,54 +34,67 @@ function App() {
     });
 
     const formatDict = {
-      timezone: "Timezone",
-      time: "Local Time",
-      temperature_2m: "Temperature",
-      precipitation_probability: "Precipitation Percentage",
-      precipitation: "Precipitation",
-      rain: "Rainfall",
-      showers: "Showers",
-      snowfall: "Snowfall",
-      snow_depth: "Snow Depth",
-      cloud_cover: "Cloud Cover Percentage",
-      visibility: "Visibility",
-      wind_speed_10m: "Wind speed",
-      wind_gusts_10m: "Wind gusts",
-      uv_index: "UV Index",
-      is_day: "Time of Day",
+      timezone: "🕚 Timezone",
+      time: "⏰ Local Time",
+      temperature_2m: "🌡️ Temperature",
+      precipitation_probability: "🌧️ Precipitation Percentage",
+      precipitation: "💧 Precipitation",
+      rain: "🌦️ Rainfall",
+      showers: "🌧️ Showers",
+      snowfall: "🌨️ Snowfall",
+      snow_depth: "☃️ Snow Depth",
+      cloud_cover: "☁️ Cloud Cover Percentage",
+      visibility: "👁️ Visibility",
+      wind_speed_10m: "🍃 Wind speed",
+      wind_gusts_10m: "️💨 Wind gusts",
+      uv_index: "☀️ UV Index",
+      is_day: "🌙 Time of Day",
     };
 
     let formatWeatherValues = (key, obj) => {
       // console.log(obj);
       // return obj.weather.weatherDetails[key];
-      if(key === "timezone") {
+      if (key === "timezone") {
         return obj.weather.weatherDetails[key];
       }
-      if(key === "time") {
-        console.log(obj.weather.weatherDetails[key])
-        return DateTime.fromFormat(obj.weather.weatherDetails[key], "yyyy-MM-dd'T'HH:mm:ss'.'SSSZZ").toLocaleString(DateTime.DATETIME_MED);
+      if (key === "time") {
+        console.log(obj.weather.weatherDetails[key]);
+        return DateTime.fromFormat(
+          obj.weather.weatherDetails[key],
+          "yyyy-MM-dd'T'HH:mm:ss'.'SSSZZ"
+        ).toLocaleString(DateTime.DATETIME_MED);
       }
-      if(key === "is_day") {
+      if (key === "is_day") {
         return obj.weather.weatherDetails[key] === 1 ? "Day" : "Night";
       }
       let unit = "";
-      if(key === "temperature_2m") {
+      if (key === "temperature_2m") {
         unit = "°F";
       }
-      if(key === "precipitation_probability" || key === "cloud_cover") {
+      if (key === "precipitation_probability" || key === "cloud_cover") {
         unit = "%";
       }
-      if(key === "precipitation" || key === "rain" || key === "showers" || key === "snowfall" || key === "snow_depth") {
+      if (
+        key === "precipitation" ||
+        key === "rain" ||
+        key === "showers" ||
+        key === "snowfall" ||
+        key === "snow_depth"
+      ) {
         unit = "in";
       }
-      if(key === "visibility") {
+      if (key === "visibility") {
         unit = "ft";
       }
-      if(key === "wind_speed_10m" || key === "wind_gusts_10m") {
+      if (key === "wind_speed_10m" || key === "wind_gusts_10m") {
         unit = "mp/h";
       }
 
-      return Number(obj.weather.weatherDetails[key]).toFixed(2).toString() + " " + unit;
+      return (
+        Number(obj.weather.weatherDetails[key]).toFixed(2).toString() +
+        " " +
+        unit
+      );
     };
 
     let getRoute = async (start, end) => {
@@ -166,16 +179,28 @@ function App() {
             coordinates[0] += e.lngLat.lng > coordinates[0] ? 360 : -360;
           }
 
+          // TODO: make it show where you just clicked
           new mapboxgl.Popup()
             .setLngLat(coordinates)
             .setHTML(
-              Object.keys(obj.weather.weatherScore.contributions)
-                .map((k) => {
-                  let f = formatWeatherValues(k, obj);
-                  let name = formatDict[k];
-                  return f !== undefined ? `<p key=${Math.random() * 10000000}>${name}: ${f}</p>` : "";
-                })
-                .join("")
+              `
+              <div class="popup-content">
+                <div class="popup-header">
+                  <h3>Weather Information</h3>
+                </div>
+                <div class="popup-body">
+                  <table>
+                    ${Object.keys(obj.weather.weatherScore.contributions)
+                      .map((k) => {
+                        let f = formatWeatherValues(k, obj);
+                        let name = formatDict[k];
+                        return `<tr><td class="popup-item"><span class="popup-label">${name}:</span></td> <td>${f}</td></tr>`;
+                      })
+                      .join("")}
+                  <table>
+                </div>
+              </div>
+              `
             )
             .addTo(map.current);
         });
