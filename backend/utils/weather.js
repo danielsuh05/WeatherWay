@@ -1,3 +1,5 @@
+const { DateTime } = require("luxon");
+
 const baseURL =
   "https://api.open-meteo.com/v1/forecast?&hourly=temperature_2m,precipitation_probability,precipitation,rain,showers,snowfall,snow_depth,cloud_cover,visibility,wind_speed_10m,wind_gusts_10m,uv_index,is_day&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=7";
 
@@ -112,7 +114,7 @@ let getWeatherScore = (weatherObject) => {
  *
  * @param {number} latitude latitude to get weather for
  * @param {number} longitude longitude to get weather for
- * @param {DateTime} time time LOCALIZED to the specific (longitude, latitude).
+ * @param {string} time time LOCALIZED to the specific (longitude, latitude).
  * @returns {object} the data object with the respective data
  */
 let getWeatherAtPointTime = async (longitude, latitude, time) => {
@@ -149,11 +151,11 @@ let getWeatherAtPointTime = async (longitude, latitude, time) => {
       return;
     })
     .then((responseJSON) => {
-      const findTime = time.toFormat("yyyy-MM-dd'T'HH:'00'");
+      const timeObj = DateTime.fromISO(time);
+      const findTime = timeObj.toFormat("yyyy-MM-dd'T'HH:'00'");
       const timeID = responseJSON.hourly.time.findIndex((t) => t === findTime);
 
       if (timeID === -1) {
-        console.log(findTime);
         console.log("Error processing the date.");
         return;
       }
