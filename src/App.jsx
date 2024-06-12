@@ -1,16 +1,36 @@
 import { useRef, useEffect, useState } from "react";
+
 import routeService from "./services/route";
 import geocodeService from "./services/geocode";
+import weatherService from "./services/weather";
+
 import mapboxgl from "mapbox-gl";
 import Gradient from "javascript-color-gradient";
 import { DateTime } from "luxon";
+import { Sidebar, Menu, MenuItem, SubMenu, useProSidebar } from "react-pro-sidebar";
+
+let MapSidebar = () => {
+  const { collapseSidebar } = useProSidebar();
+  
+  return (
+    <>
+      <Sidebar className="sidebar">
+        <Menu>
+          <SubMenu label="Charts">
+            <MenuItem> Pie charts </MenuItem>
+            <MenuItem> Line charts </MenuItem>
+          </SubMenu>
+          <MenuItem> Documentation </MenuItem>
+          <MenuItem> Calendar </MenuItem>
+        </Menu>
+      </Sidebar>
+    </>
+  );
+};
 
 function App() {
   const mapContainer = useRef(null);
   const map = useRef(null);
-  // const [lng, setLng] = useState(-98.5795);
-  // const [lat, setLat] = useState(39.8283);
-  // const [zoom, setZoom] = useState(3);
 
   // TODO: REMOVE, FOR TESTING PURPOSES
   const [lng, setLng] = useState(-74.734749);
@@ -53,20 +73,19 @@ function App() {
     };
 
     let formatWeatherValues = (key, obj) => {
-      // console.log(obj);
-      // return obj.weather.weatherDetails[key];
       if (key === "timezone") {
         return obj.weather.weatherDetails[key];
       }
       if (key === "time") {
-        console.log(obj.weather.weatherDetails[key]);
         return DateTime.fromFormat(
           obj.weather.weatherDetails[key],
           "yyyy-MM-dd'T'HH:mm:ss'.'SSSZZ"
         ).toLocaleString(DateTime.DATETIME_MED);
       }
       if (key === "is_day") {
-        return obj.weather.weatherDetails[key] === 1 ? "Day (0)" : "Night (-10)";
+        return obj.weather.weatherDetails[key] === 1
+          ? "Day (0)"
+          : "Night (-10)";
       }
       let unit = "";
       if (key === "temperature_2m") {
@@ -94,9 +113,11 @@ function App() {
       return (
         Number(obj.weather.weatherDetails[key]).toFixed(2).toString() +
         " " +
-        unit + 
-        " (" + 
-        Number(obj.weather.weatherScore.contributions[key]).toFixed(0).toString() + 
+        unit +
+        " (" +
+        Number(obj.weather.weatherScore.contributions[key])
+          .toFixed(0)
+          .toString() +
         ")"
       );
     };
@@ -140,8 +161,91 @@ function App() {
           },
         });
       }
+      map.current.on("click", "route", async (e) => {
+        const coordinates = [e.lngLat.lng, e.lngLat.lat];
+
+        const location = await geocodeService.getReverseGeocode(
+          coordinates[0],
+          coordinates[1]
+        );
+
+        const timeOffset = await routeService.getTimeOffset(
+          coordinates[0],
+          coordinates[1]
+        );
+
+        const time = DateTime.now()
+          .plus({
+            seconds: timeOffset,
+          })
+          .toISO();
+
+        const weatherAtPoint = await weatherService.getWeatherAtPoint(
+          coordinates[0],
+          coordinates[1],
+          time
+        );
+        const obj = { weather: weatherAtPoint };
+
+        new mapboxgl.Popup()
+          .setLngLat(coordinates)
+          .setHTML(
+            `
+              <div class="popup-content">
+                <div class="popup-header">
+                  <h3>Weather Information for ${location}</h3>
+                </div>
+                <div class="popup-body">
+                  <table>
+                    ${Object.keys(obj.weather.weatherScore.contributions)
+                      .map((k) => {
+                        let f = formatWeatherValues(k, obj);
+                        let name = formatDict[k];
+                        return `<tr><td class="popup-item"><span class="popup-label">${name}:</span></td> <td>${f}</td></tr>`;
+                      })
+                      .join("")}
+                  <table>
+                </div>
+              </div>
+              `
+          )
+          .addTo(map.current);
+      });
     };
 
+    /**
+     * Markers take so long to load that they aren't loaded before this gets run.
+     * We have to make this a separate function otherwise the cursor shape will not change.
+     */
+    let changeCursorFeatures = async () => {
+      await new Promise((r) => setTimeout(r, 5000));
+
+      for (let i = 0; i < 6; i++) {
+        map.current.on("mousemove", (e) => {
+          var fs = map.current.queryRenderedFeatures(e.point, {
+            layers: ["route", `text${i}`, `marker${i}`],
+          });
+          if (fs.length > 0) {
+            map.current.getCanvas().style.cursor = "pointer";
+          }
+        });
+      }
+
+      for (let i = 0; i < 6; i++) {
+        map.current.on("mousemove", (e) => {
+          var fs = map.current.queryRenderedFeatures(e.point, {
+            layers: ["route", `text${i}`, `marker${i}`],
+          });
+          if (fs.length === 0) {
+            map.current.getCanvas().style.cursor = "";
+          }
+        });
+      }
+    };
+
+    /**
+     * Gets the markers (circles) for the route.
+     */
     let getDisplayMarkers = async () => {
       const gradientArray = new Gradient()
         .setColorGradient("#ff5f58", "#ffbc2e", "#28c840")
@@ -213,14 +317,6 @@ function App() {
             .addTo(map.current);
         });
 
-        map.current.on("mouseenter", `marker${i}`, () => {
-          map.current.getCanvas().style.cursor = "pointer";
-        });
-
-        map.current.on("mouseleave", `marker${i}`, () => {
-          map.current.getCanvas().style.cursor = "";
-        });
-
         map.current.addLayer({
           id: `text${i}`,
           type: "symbol",
@@ -245,6 +341,7 @@ function App() {
             "text-justify": "center",
           },
         });
+
         map.current.moveLayer(`marker${i}`);
         map.current.moveLayer(`text${i}`);
       });
@@ -257,20 +354,25 @@ function App() {
       // const point2 = [-118.2426, 34.0549];
       // const point2 = [-149.8997, 61.2176];
       getRoute(point1, point2).then(() => {
-        getDisplayMarkers(point1, point2);
+        getDisplayMarkers(point1, point2).then(() => {
+          changeCursorFeatures();
+        });
       });
     });
   });
 
   return (
-    <div className="overall-container">
-      <div className="content-container">
-        {/* <div className="sidebar">
+    <>
+      <div className="overall-container">
+        <div className="content-container">
+          {/* <div className="sidebar">
           Longitude: {lng} | Latitude: {lat} | Zoom: {zoom}
         </div> */}
-        <div ref={mapContainer} className="map-container" />
+          <div ref={mapContainer} className="map-container" />
+        </div>
       </div>
-    </div>
+      <MapSidebar />
+    </>
   );
 }
 

@@ -163,7 +163,7 @@ let getWeatherAtPointTime = async (longitude, latitude, time) => {
       const beginWeather = createWeatherObject(responseJSON, timeID);
       const endWeather = createWeatherObject(responseJSON, timeID + 1);
 
-      const t = time.minute / 60;
+      const t = timeObj.minute / 60;
 
       // interpolate between beginWeather and endWeather using simple lerp
       const weatherObject = Object.keys(beginWeather).reduce((a, k) => {
