@@ -7,21 +7,35 @@ import weatherService from "./services/weather";
 import mapboxgl from "mapbox-gl";
 import Gradient from "javascript-color-gradient";
 import { DateTime } from "luxon";
-import { Sidebar, Menu, MenuItem, SubMenu, useProSidebar } from "react-pro-sidebar";
+import { Sidebar, Menu, MenuItem, SubMenu } from "react-pro-sidebar";
 
-let MapSidebar = () => {
-  const { collapseSidebar } = useProSidebar();
+let MapSidebar = ({setStartPoint, setEndPoint}) => {
+  let handleSubmit = (e) => {
+    e.preventDefault();
+    
+    const coord1 = document.getElementById("coord1").value;
+    const coord2 = document.getElementById("coord2").value;
+
+    setStartPoint(coord1);
+    setEndPoint(coord2);
+  }
   
   return (
     <>
       <Sidebar className="sidebar">
         <Menu>
-          <SubMenu label="Charts">
-            <MenuItem> Pie charts </MenuItem>
-            <MenuItem> Line charts </MenuItem>
-          </SubMenu>
-          <MenuItem> Documentation </MenuItem>
-          <MenuItem> Calendar </MenuItem>
+          <h2>WeatherWay</h2>
+          <form className="form" onSubmit={handleSubmit}>
+            <label htmlFor="coord1">Starting point</label>
+            <br />
+            <input type="text" id="coord1" name="coord1" />
+            <br />
+            <label htmlFor="coord2">Destination</label>
+            <br />
+            <input type="text" id="coord2" name="coord2" />
+            <br />
+            <input type="submit" value="Submit" />
+          </form>
         </Menu>
       </Sidebar>
     </>
@@ -36,6 +50,9 @@ function App() {
   const [lng, setLng] = useState(-74.734749);
   const [lat, setLat] = useState(41.70976);
   const [zoom, setZoom] = useState(6);
+
+  const [startPoint, setStartPoint] = useState([]);
+  const [endPoint, setEndPoint] = useState([]);
 
   useEffect(() => {
     mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
@@ -348,11 +365,9 @@ function App() {
     };
 
     map.current.on("load", () => {
-      // TODO: remove later
-      const point1 = [-74.864549, 42.632477];
-      const point2 = [-74.551546, 40.329155];
-      // const point2 = [-118.2426, 34.0549];
-      // const point2 = [-149.8997, 61.2176];
+      const point1 = startPoint;
+      const point2 = endPoint;
+      
       getRoute(point1, point2).then(() => {
         getDisplayMarkers(point1, point2).then(() => {
           changeCursorFeatures();
@@ -371,7 +386,7 @@ function App() {
           <div ref={mapContainer} className="map-container" />
         </div>
       </div>
-      <MapSidebar />
+      <MapSidebar setStartPoint={setStartPoint} setEndPoint={setEndPoint} />
     </>
   );
 }
