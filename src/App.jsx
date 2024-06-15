@@ -10,12 +10,23 @@ import Gradient from "javascript-color-gradient";
 import { DateTime } from "luxon";
 import { Sidebar, Menu } from "react-pro-sidebar";
 
+let ErrorMessage = ({ message }) => {
+  return (
+    <div className="error">
+      <h3>Error:</h3>
+      <p>{message}</p>
+    </div>
+  );
+};
+
 /**
  * Transparent sidebar that has all of the user-input options
  * @param {MapBox} map the current map object that is being displayed on screen
  * @returns transparent sidebar react component
  */
 let MapSidebar = ({ map }) => {
+  const [errorParsing, setErrorParsing] = useState(false);
+
   let handleSubmit = (e) => {
     e.preventDefault();
 
@@ -28,10 +39,14 @@ let MapSidebar = ({ map }) => {
       .value.replace(/\s/g, "")
       .split(",");
 
-    console.log(typeof coord1);
-    console.log(coord2);
+    const pattern = /^\d+(\.\d+)?,\d+(\.\d+)?$/;
 
-    renderRoute(map, coord1, coord2);
+    if (pattern.test(coord1) && pattern.test(coord2)) {
+      renderRoute(map, coord1, coord2);
+    } else {
+      setErrorParsing(true);
+    }
+    
   };
 
   return (
@@ -40,15 +55,18 @@ let MapSidebar = ({ map }) => {
         <Menu>
           <h2>WeatherWay</h2>
           <form className="form" onSubmit={handleSubmit}>
-            <label htmlFor="coord1">Starting point</label>
-            <br />
-            <input type="text" id="coord1" name="coord1" />
-            <br />
-            <label htmlFor="coord2">Destination</label>
-            <br />
-            <input type="text" id="coord2" name="coord2" />
-            <br />
+            <label htmlFor="coord1">Starting point:</label>
+            <input type="text" id="coord1" name="coord1" placeholder="longitude, latitude" />
+            <label htmlFor="coord2">Destination:</label>
+            <input type="text" id="coord2" name="coord2" placeholder="longitude, latitude"/>
             <input type="submit" value="Submit" />
+            {errorParsing && (
+              <ErrorMessage
+                message={
+                  "Error parsing longitude and latitude inputs."
+                }
+              />
+            )}
           </form>
         </Menu>
       </Sidebar>

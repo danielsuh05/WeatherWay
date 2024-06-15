@@ -1,3 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
+
+html {
+  font-family: 'Open Sans', 'Roboto', sans-serif;
+}
+
 .map-container {
   height: 100%;
 }
@@ -17,12 +23,10 @@
 .mapboxgl-popup p {
   opacity: 1.0;
   text-align: center;
-  font-family: 'Open Sans', sans-serif;
 }
 
 .mapboxgl-popup-content {
   text-align: center;
-  font-family: 'Open Sans', sans-serif;
   background-color:rgba(255, 255, 255, 0.9);
   width: 310px;
 }
@@ -74,7 +78,66 @@ td:first-of-type {
 .sidebar {
   height: 100vh;
   margin-top: 0;
-  font-family: 'Open Sans', sans-serif;
+}
+
+.sidebar h2 {
+  max-width: fit-content;
+  margin: 1rem auto 1rem auto;
+}
+
+input {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+
+  border: 1.75px solid #333;
+  background-color: white;
+  border-radius: 0.25rem;
+
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  
+  margin-top: 5px;
+}
+
+.form {
+  padding: 5px;
+}
+
+#coord1 {
+  margin-bottom: 1rem
+}
+
+input[type=submit] {
+  margin-bottom: 10px;
+  cursor: pointer;
+  background-color: #488fed;
+}
+
+.error {
+  border: 2px solid red;
+  background: rgba(255, 0, 0, 0.2);
+  border-radius: 0.25rem;
+  padding-left: 7.5px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+
+.error h3 {
+  padding: 0 0 10px 0;
+  margin: 0px;
+}
+
+.error p {
+  padding: 0px;
+  margin: 0px;
 }
 
 body {
