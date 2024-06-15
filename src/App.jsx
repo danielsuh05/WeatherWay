@@ -46,25 +46,37 @@ let MapSidebar = ({ map }) => {
     } else {
       setErrorParsing(true);
     }
-    
   };
 
   return (
     <>
       <Sidebar className="sidebar">
         <Menu>
-          <h2>WeatherWay</h2>
+          <div className="title">
+            <h2>
+              WeatherWay 
+            </h2>
+            <img src="../171845894336730124.png"></img>
+          </div>
           <form className="form" onSubmit={handleSubmit}>
             <label htmlFor="coord1">Starting point:</label>
-            <input type="text" id="coord1" name="coord1" placeholder="longitude, latitude" />
+            <input
+              type="text"
+              id="coord1"
+              name="coord1"
+              placeholder="longitude, latitude"
+            />
             <label htmlFor="coord2">Destination:</label>
-            <input type="text" id="coord2" name="coord2" placeholder="longitude, latitude"/>
+            <input
+              type="text"
+              id="coord2"
+              name="coord2"
+              placeholder="longitude, latitude"
+            />
             <input type="submit" value="Submit" />
             {errorParsing && (
               <ErrorMessage
-                message={
-                  "Error parsing longitude and latitude inputs."
-                }
+                message={"Error parsing longitude and latitude inputs."}
               />
             )}
           </form>

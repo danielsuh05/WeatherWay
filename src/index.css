@@ -80,9 +80,17 @@ td:first-of-type {
   margin-top: 0;
 }
 
-.sidebar h2 {
-  max-width: fit-content;
+.title {
+  display: flex;
+  align-items: center;
+  max-width: max-content;
   margin: 1rem auto 1rem auto;
+  gap: 10px;
+}
+
+.title img {
+  width: 30px;
+  height: 30px;
 }
 
 input {
