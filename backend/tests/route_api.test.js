@@ -12,10 +12,10 @@ describe("route API", () => {
       .expect("Content-Type", /application\/json/);
   });
 
-  test("invalid route returns 202", async () => {
+  test("invalid route returns 400", async () => {
     await api
       .get("/api/route/path/74.864549&42.632477&-74.551546&40.329155")
-      .expect(202);
+      .expect(400);
   });
   
   test("markers is returned as json", async () => {
@@ -39,9 +39,9 @@ describe("route API", () => {
       .expect("Content-Type", /application\/json/);
   });
 
-  test("invalid time offset returns 202", async () => {
+  test("invalid time offset returns 400", async () => {
     await api
       .get("/api/route/timeoffset/74.864549&42.632477")
-      .expect(202);
+      .expect(400);
   });
 });

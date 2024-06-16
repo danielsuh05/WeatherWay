@@ -109,7 +109,7 @@ let getTimeOffsetAlongPath = (longitude, latitude) => {
             [coordinates[k - 1][0], coordinates[k - 1][1]],
           ]);
 
-          onLine = turf.booleanPointOnLine(pt, line, { epsilon: 1e-5 });
+          onLine = turf.booleanPointOnLine(pt, line, { epsilon: 1e-3 });
         }
         if (onLine) {
           const t = estDistance / overallDistance;

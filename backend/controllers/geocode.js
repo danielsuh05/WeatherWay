@@ -10,13 +10,14 @@ routeController.get(
       req.params.lat,
     );
 
-    // If there was an error getting data from API, send status code 202
+    // If there was an error getting data from API, send status code 400
     if (location === undefined) {
       res
-        .status(202)
+        .status(400)
         .send(
           "Error getting data from API, check if longitude, latitude, and time are in range."
         );
+      return;
     }
 
     res.json(location);

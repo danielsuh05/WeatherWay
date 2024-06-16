@@ -5,8 +5,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "jest",
-    "test:silent": "jest --silent"
+    "test": "jest --silent",
+    "test:verbose": "jest"
   },
   "author": "Daniel Suh",
   "license": "MIT",

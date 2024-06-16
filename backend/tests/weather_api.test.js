@@ -15,12 +15,12 @@ describe("weather API", () => {
       .expect("Content-Type", /application\/json/);
   });
 
-  test("97:00 throws 202", async () => {
+  test("97:00 throws 400", async () => {
     const date = DateTime.now().toFormat("yyyy-MM-dd'T''97:00'");
 
     await api
       .get(`/api/weather/-74.0060&40.7128&${date}`)
-      .expect(202);
+      .expect(400);
   });
 
   test("00:00", async () => {
