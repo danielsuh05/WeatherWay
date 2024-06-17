@@ -7,13 +7,13 @@ require("dotenv").config();
 
 const baseURL = "https://api.mapbox.com/directions/v5/mapbox/driving/";
 
-let savedRoute;
+let savedRoute, startTime;
 let startCoord, endCoord;
 
-let constructURL = (startLong, startLat, endLong, endLat) => {
+let constructURL = (startLong, startLat, endLong, endLat, time) => {
   return (
     baseURL +
-    `${startLong}%2C${startLat}%3B${endLong}%2C${endLat}?alternatives=false&geometries=geojson&language=en&overview=full&steps=true&access_token=${process.env.MAPBOX_ACCESS_TOKEN}`
+    `${startLong}%2C${startLat}%3B${endLong}%2C${endLat}?depart_at=${time}&alternatives=false&geometries=geojson&language=en&overview=full&steps=true&access_token=${process.env.MAPBOX_ACCESS_TOKEN}`
   );
 };
 
@@ -62,7 +62,7 @@ let getMarkers = async () => {
   await Promise.all(
     points.map(async (point) => {
       // TODO: if users want to change the time, then just change it here
-      const time = DateTime.now().plus({
+      const time = DateTime.fromFormat(startTime, "yyyy'-'MM'-'dd'T'HH':'mm").plus({
         seconds: getTimeOffsetAlongPath(point[0], point[1]),
       });
       const weatherObj = await getWeatherAtPointTime(point[0], point[1], time);
@@ -81,6 +81,7 @@ let getMarkers = async () => {
  * @returns {number} how long it will take to get to that point along the route
  */
 let getTimeOffsetAlongPath = (longitude, latitude) => {
+  console.log(longitude, latitude);
   const route = savedRoute;
   const legs = route.routes[0].legs;
   const pt = turf.point([longitude, latitude]);
@@ -113,6 +114,7 @@ let getTimeOffsetAlongPath = (longitude, latitude) => {
         }
         if (onLine) {
           const t = estDistance / overallDistance;
+          console.log(sumDurations, estDistance, overallDistance);
           return sumDurations + legs[i].steps[j].duration * t;
         }
       }
@@ -120,6 +122,8 @@ let getTimeOffsetAlongPath = (longitude, latitude) => {
       sumDurations += legs[i].steps[j].duration;
     }
   }
+
+  console.log(sumDurations);
 
   if (longitude === startCoord[0] && latitude == startCoord[1]) {
     return 0;
@@ -138,10 +142,12 @@ let getTimeOffsetAlongPath = (longitude, latitude) => {
  * @param {number} startLat starting latitude
  * @param {number} endLong ending longitude
  * @param {number} endLat ending latitude
+ * @param {string} time time in the format YYYY-MM-ddTHH:mm
  * @returns JSON response from MapBox API
  */
-let getRoute = async (startLong, startLat, endLong, endLat) => {
-  const url = constructURL(startLong, startLat, endLong, endLat);
+let getRoute = async (startLong, startLat, endLong, endLat, time) => {
+  const url = constructURL(startLong, startLat, endLong, endLat, time);
+  console.log(url);
 
   const route = await fetch(url)
     .then((response) => {
@@ -167,6 +173,7 @@ let getRoute = async (startLong, startLat, endLong, endLat) => {
 
   if (route) {
     savedRoute = route;
+    startTime = time;
     startCoord = [startLong, startLat];
     endCoord = [endLong, endLat];
   }

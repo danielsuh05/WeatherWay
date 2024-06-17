@@ -13,7 +13,6 @@ html {
   left: 50%;
   top: 50%;
 
-  /* TODO: does it look better if it isn't 100% of the screen? */
   transform: translate(-50%, -50%);
   width: 100%;
   height: 100%;
@@ -119,7 +118,7 @@ input {
   padding: 5px;
 }
 
-#coord1 {
+#coord1, #coord2 {
   margin-bottom: 1rem
 }
 
@@ -127,6 +126,10 @@ input[type=submit] {
   margin-bottom: 10px;
   cursor: pointer;
   background-color: #488fed;
+}
+
+#departure-time {
+  font-family: 'Open Sans', 'Roboto', sans-serif;
 }
 
 .error {

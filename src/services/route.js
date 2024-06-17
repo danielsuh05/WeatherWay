@@ -1,9 +1,9 @@
 import axios from "axios";
 const baseURL = "http://localhost:3001/api/route";
 
-let getRoute = (startLong, startLat, endLong, endLat) => {
+let getRoute = (startLong, startLat, endLong, endLat, time) => {
   const request = axios.get(
-    baseURL + `/path/${startLong}&${startLat}&${endLong}&${endLat}`,
+    baseURL + `/path/${startLong}&${startLat}&${endLong}&${endLat}&${time}`,
     { validateStatus: false }
   );
   return request
@@ -44,7 +44,7 @@ let getTimeOffset = (long, lat) => {
         throw new Error(response.data.msg);
       }
       
-      response.data
+      return response.data
     })
     .catch((error) => {
       throw error;

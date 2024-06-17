@@ -2,8 +2,9 @@ const {getRoute, getTimeOffsetAlongPath, getMarkersAlongPath} = require("../util
 
 const routeController = require("express").Router();
 
-routeController.get("/path/:startLong&:startLat&:endLong&:endLat", async (req, res) => {
-  let route = await getRoute(req.params.startLong, req.params.startLat, req.params.endLong, req.params.endLat);
+routeController.get("/path/:startLong&:startLat&:endLong&:endLat&:time", async (req, res) => {
+  console.log('oeusntoehutsn');
+  let route = await getRoute(req.params.startLong, req.params.startLat, req.params.endLong, req.params.endLat, req.params.time);
 
   // If there was an error getting data from API, send status code 400
   if (route === undefined) {

@@ -7,6 +7,7 @@ import weatherService from "./services/weather";
 
 import mapboxgl from "mapbox-gl";
 import Gradient from "javascript-color-gradient";
+import DatePicker from "react-date-picker";
 import turf from "turf";
 import { DateTime } from "luxon";
 import { Sidebar, Menu } from "react-pro-sidebar";
@@ -27,6 +28,10 @@ let ErrorMessage = ({ message }) => {
  */
 let MapSidebar = ({ map }) => {
   const [errorMessage, setErrorMessage] = useState("");
+  const [averageScore, setAverageScore] = useState(-1);
+  const [startDate, setStartDate] = useState(
+    DateTime.now().toFormat("yyyy'-'MM'-'dd'T'HH':'MM")
+  );
 
   let renderRoute = async (map, startPoint, endPoint) => {
     const formatDict = {
@@ -50,12 +55,6 @@ let MapSidebar = ({ map }) => {
     let formatWeatherValues = (key, obj) => {
       if (key === "timezone") {
         return obj.weather.weatherDetails[key];
-      }
-      if (key === "time") {
-        return DateTime.fromFormat(
-          obj.weather.weatherDetails[key],
-          "yyyy-MM-dd'T'HH:mm:ss'.'SSSZZ"
-        ).toLocaleString(DateTime.DATETIME_MED);
       }
       if (key === "is_day") {
         return obj.weather.weatherDetails[key] === 1
@@ -100,21 +99,24 @@ let MapSidebar = ({ map }) => {
     let changeZoom = (map, geojson) => {
       const line = turf.lineString(geojson);
       const bbox = turf.bbox(line);
-      
-      
-      map.current.fitBounds([
-        [bbox[0], bbox[1]],
-        [bbox[2], bbox[3]],
-      ], {padding: 100});
+
+      map.current.fitBounds(
+        [
+          [bbox[0], bbox[1]],
+          [bbox[2], bbox[3]],
+        ],
+        { padding: 100 }
+      );
     };
 
-    let getRoute = async (start, end) => {
+    let getRoute = async (start, end, time) => {
       try {
         var json = await routeService.getRoute(
           start[0],
           start[1],
           end[0],
-          end[1]
+          end[1],
+          time
         );
       } catch (err) {
         setErrorMessage(err.message);
@@ -178,7 +180,7 @@ let MapSidebar = ({ map }) => {
           return;
         }
 
-        const time = DateTime.now()
+        const time = DateTime.fromFormat(startDate, "yyyy'-'MM'-'dd'T'HH':'mm")
           .plus({
             seconds: timeOffset,
           })
@@ -207,11 +209,17 @@ let MapSidebar = ({ map }) => {
                 <div class="popup-body">
                   <table>
                     ${Object.keys(obj.weather.weatherScore.contributions)
-                      .map((k) => {
-                        let f = formatWeatherValues(k, obj);
-                        let name = formatDict[k];
-                        return `<tr><td class="popup-item"><span class="popup-label">${name}:</span></td> <td>${f}</td></tr>`;
-                      })
+                        .map((k) => {
+                          let f = formatWeatherValues(k, obj);
+                          let name = formatDict[k];
+
+                          if (k === "time") {
+                            f = DateTime.fromISO(time).toFormat("yyyy'-'MM'-'dd' 'HH':'MM a")
+                            console.log(f);
+                          }
+
+                          return `<tr><td class="popup-item"><span class="popup-label">${name}:</span></td> <td>${f}</td></tr>`;
+                        })
                       .join("")}
                   <table>
                 </div>
@@ -225,7 +233,7 @@ let MapSidebar = ({ map }) => {
       });
 
       map.current.on("mouseleave", "route", () => {
-        map.current.getCanvas().style.cursor = "fointer";
+        map.current.getCanvas().style.cursor = "default";
       });
 
       setErrorMessage("");
@@ -246,6 +254,8 @@ let MapSidebar = ({ map }) => {
         setErrorMessage(err.message);
         return;
       }
+
+      let sumScores = 0;
 
       markers.forEach((obj, i) => {
         map.current.addLayer({
@@ -272,6 +282,8 @@ let MapSidebar = ({ map }) => {
             "circle-color": gradientArray[obj.weather.weatherScore.score],
           },
         });
+
+        sumScores += obj.weather.weatherScore.score;
 
         map.current.addLayer({
           id: `text${i}`,
@@ -302,6 +314,7 @@ let MapSidebar = ({ map }) => {
         map.current.moveLayer(`text${i}`);
       });
 
+      setAverageScore(Number(sumScores / markers.length).toFixed(1));
       setErrorMessage("");
     };
 
@@ -332,7 +345,7 @@ let MapSidebar = ({ map }) => {
       popups[0].remove();
     }
 
-    getRoute(startPoint, endPoint).then(() => {
+    getRoute(startPoint, endPoint, startDate).then(() => {
       if (map.current.getLayer("route")) {
         getDisplayMarkers(startPoint, endPoint);
       }
@@ -363,6 +376,10 @@ let MapSidebar = ({ map }) => {
     }
   };
 
+  let onDateChange = (e) => {
+    setStartDate(e.target.value);
+  };
+
   return (
     <>
       <Sidebar className="sidebar">
@@ -386,8 +403,24 @@ let MapSidebar = ({ map }) => {
               name="coord2"
               placeholder="longitude, latitude"
             />
+            Time of Departure:
+            <input
+              type="datetime-local"
+              id="departure-time"
+              value={startDate}
+              min={DateTime.now().toFormat("yyyy'-'MM'-'dd'T'HH':'MM")}
+              max={DateTime.now()
+                .plus({ days: 3 })
+                .toFormat("yyyy'-'MM'-'dd'T'HH':'MM")}
+              onChange={onDateChange}
+            />
             <input type="submit" value="Submit" />
             {errorMessage != "" && <ErrorMessage message={errorMessage} />}
+            {averageScore != -1 && (
+              <p>
+                Average score: <strong>{averageScore}</strong>
+              </p>
+            )}
           </form>
         </Menu>
       </Sidebar>
@@ -399,11 +432,6 @@ function App() {
   const mapContainer = useRef(null);
   const map = useRef(null);
 
-  // TODO: REMOVE, FOR TESTING PURPOSES
-  const [lng, setLng] = useState(-74.734749);
-  const [lat, setLat] = useState(41.70976);
-  const [zoom, setZoom] = useState(6);
-
   useEffect(() => {
     mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
@@ -411,14 +439,8 @@ function App() {
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/streets-v12",
-      center: [lng, lat],
-      zoom: zoom,
-    });
-
-    map.current.on("move", () => {
-      setLng(map.current.getCenter().lng.toFixed(4));
-      setLat(map.current.getCenter().lat.toFixed(4));
-      setZoom(map.current.getZoom().toFixed(2));
+      center: [-74.734749, 41.70976],
+      zoom: 6,
     });
   });
 

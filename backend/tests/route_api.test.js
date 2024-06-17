@@ -7,14 +7,14 @@ const api = supertest(app);
 describe("route API", () => {
   test("route is returned as json", async () => {
     await api
-      .get("/api/route/path/-74.864549&42.632477&-74.551546&40.329155")
+      .get("/api/route/path/-74.864549&42.632477&-74.551546&40.329155&2024-06-17T23:55")
       .expect(200)
       .expect("Content-Type", /application\/json/);
   });
 
   test("invalid route returns 400", async () => {
     await api
-      .get("/api/route/path/74.864549&42.632477&-74.551546&40.329155")
+      .get("/api/route/path/74.864549&42.632477&-74.551546&40.329155&2024-06-17T23:55")
       .expect(400);
   });
   
