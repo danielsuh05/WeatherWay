@@ -31,6 +31,7 @@ let MapSidebar = ({ map }) => {
   const [startDate, setStartDate] = useState(
     DateTime.now().toFormat("yyyy'-'MM'-'dd'T'HH':'MM")
   );
+  const [selectedOption, setSelectedOption] = useState("score");
 
   // use `useCallback` because mapbox requires the same function reference when using on/off
   let onClickRoute = useCallback(async (e) => {
@@ -106,7 +107,7 @@ let MapSidebar = ({ map }) => {
       )
       .addTo(map.current);
   }, []);
-  
+
   const formatDict = {
     timezone: "🕚 Timezone",
     time: "⏰ Local Time",
@@ -228,7 +229,7 @@ let MapSidebar = ({ map }) => {
 
         changeZoom(map, geojson.geometry.coordinates);
       }
-      
+
       map.current.off("click", "route", onClickRoute);
       map.current.on("click", "route", onClickRoute);
 
@@ -330,7 +331,7 @@ let MapSidebar = ({ map }) => {
     if (map.current.getSource("route")) {
       map.current.removeSource("route");
     }
-    
+
     const allLayers = map.current.getStyle().layers;
     const regexPattern = /^(marker|text).*/;
 
@@ -384,6 +385,13 @@ let MapSidebar = ({ map }) => {
     setStartDate(e.target.value);
   };
 
+  let handleRadioClick = (e) => {
+    e.preventDefault();
+    console.log(e);
+    setSelectedOption(e.target.id);
+  };
+
+  console.log(selectedOption);
   return (
     <>
       <Sidebar className="sidebar">
@@ -418,6 +426,37 @@ let MapSidebar = ({ map }) => {
                 .toFormat("yyyy'-'MM'-'dd'T'HH':'MM")}
               onChange={onDateChange}
             />
+            Marker Data:
+            <div className="radio-form">
+              <div
+                className={selectedOption !== "score" ? "radio-button" : "radio-button-selected"}
+                id="score"
+                onClick={handleRadioClick}
+              >
+                Score
+              </div>
+              <div
+                className={selectedOption !== "temperature" ? "radio-button" : "radio-button-selected"}
+                id="temperature"
+                onClick={handleRadioClick}
+              >
+                Temperature
+              </div>
+              <div
+                className={selectedOption !== "precipitation" ? "radio-button" : "radio-button-selected"}
+                id="precipitation"
+                onClick={handleRadioClick}
+              >
+                Precipitation %
+              </div>
+              <div
+                className={selectedOption !== "wind" ? "radio-button" : "radio-button-selected"}
+                id="wind"
+                onClick={handleRadioClick}
+              >
+                Wind Speed
+              </div>
+            </div>
             <input type="submit" value="Submit" />
             {errorMessage != "" && <ErrorMessage message={errorMessage} />}
             {averageScore != -1 && (
