@@ -1,5 +1,5 @@
 /* eslint-disable react/prop-types */
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 
 import routeService from "./services/route";
 import geocodeService from "./services/geocode";
@@ -7,7 +7,6 @@ import weatherService from "./services/weather";
 
 import mapboxgl from "mapbox-gl";
 import Gradient from "javascript-color-gradient";
-import DatePicker from "react-date-picker";
 import turf from "turf";
 import { DateTime } from "luxon";
 import { Sidebar, Menu } from "react-pro-sidebar";
@@ -33,82 +32,155 @@ let MapSidebar = ({ map }) => {
     DateTime.now().toFormat("yyyy'-'MM'-'dd'T'HH':'MM")
   );
 
+  // use `useCallback` because mapbox requires the same function reference when using on/off
+  let onClickRoute = useCallback(async (e) => {
+    const coordinates = [e.lngLat.lng, e.lngLat.lat];
+
+    try {
+      var location = await geocodeService.getReverseGeocode(
+        coordinates[0],
+        coordinates[1]
+      );
+    } catch (err) {
+      setErrorMessage(err.message);
+      return;
+    }
+
+    try {
+      var timeOffset = await routeService.getTimeOffset(
+        coordinates[0],
+        coordinates[1]
+      );
+    } catch (err) {
+      setErrorMessage(err.message);
+      return;
+    }
+
+    const time = DateTime.fromFormat(startDate, "yyyy'-'MM'-'dd'T'HH':'mm")
+      .plus({
+        seconds: timeOffset,
+      })
+      .toISO();
+
+    try {
+      var weatherAtPoint = await weatherService.getWeatherAtPoint(
+        coordinates[0],
+        coordinates[1],
+        time
+      );
+    } catch (err) {
+      setErrorMessage(err.message);
+      return;
+    }
+    const obj = { weather: weatherAtPoint };
+
+    new mapboxgl.Popup()
+      .setLngLat(coordinates)
+      .setHTML(
+        `
+              <div class="popup-content">
+                <div class="popup-header">
+                  <h3>Weather Information for ${location}</h3>
+                </div>
+                <div class="popup-body">
+                  <table>
+                    ${Object.keys(obj.weather.weatherScore.contributions)
+                      .map((k) => {
+                        let f = formatWeatherValues(k, obj);
+                        let name = formatDict[k];
+
+                        if (k === "time") {
+                          f = DateTime.fromISO(time).toFormat(
+                            "yyyy'-'MM'-'dd' 'HH':'MM a"
+                          );
+                          console.log(f);
+                        }
+
+                        return `<tr><td class="popup-item"><span class="popup-label">${name}:</span></td> <td>${f}</td></tr>`;
+                      })
+                      .join("")}
+                  <table>
+                </div>
+              </div>
+              `
+      )
+      .addTo(map.current);
+  }, []);
+  
+  const formatDict = {
+    timezone: "🕚 Timezone",
+    time: "⏰ Local Time",
+    temperature_2m: "🌡️ Temperature",
+    precipitation_probability: "🌧️ Precipitation Percentage",
+    precipitation: "💧 Precipitation",
+    rain: "🌦️ Rainfall",
+    showers: "🌧️ Showers",
+    snowfall: "🌨️ Snowfall",
+    snow_depth: "☃️ Snow Depth",
+    cloud_cover: "☁️ Cloud Cover Percentage",
+    visibility: "👁️ Visibility",
+    wind_speed_10m: "🍃 Wind speed",
+    wind_gusts_10m: "️💨 Wind gusts",
+    uv_index: "☀️ UV Index",
+    is_day: "🌙 Time of Day",
+  };
+
+  let formatWeatherValues = (key, obj) => {
+    if (key === "timezone") {
+      return obj.weather.weatherDetails[key];
+    }
+    if (key === "is_day") {
+      return obj.weather.weatherDetails[key] === 1 ? "Day (0)" : "Night (-10)";
+    }
+    let unit = "";
+    if (key === "temperature_2m") {
+      unit = "°F";
+    }
+    if (key === "precipitation_probability" || key === "cloud_cover") {
+      unit = "%";
+    }
+    if (
+      key === "precipitation" ||
+      key === "rain" ||
+      key === "showers" ||
+      key === "snowfall" ||
+      key === "snow_depth"
+    ) {
+      unit = "in";
+    }
+    if (key === "visibility") {
+      unit = "ft";
+    }
+    if (key === "wind_speed_10m" || key === "wind_gusts_10m") {
+      unit = "mp/h";
+    }
+
+    return (
+      Number(obj.weather.weatherDetails[key]).toFixed(2).toString() +
+      " " +
+      unit +
+      " (" +
+      Number(obj.weather.weatherScore.contributions[key])
+        .toFixed(0)
+        .toString() +
+      ")"
+    );
+  };
+
+  let changeZoom = (map, geojson) => {
+    const line = turf.lineString(geojson);
+    const bbox = turf.bbox(line);
+
+    map.current.fitBounds(
+      [
+        [bbox[0], bbox[1]],
+        [bbox[2], bbox[3]],
+      ],
+      { padding: 100 }
+    );
+  };
+
   let renderRoute = async (map, startPoint, endPoint) => {
-    const formatDict = {
-      timezone: "🕚 Timezone",
-      time: "⏰ Local Time",
-      temperature_2m: "🌡️ Temperature",
-      precipitation_probability: "🌧️ Precipitation Percentage",
-      precipitation: "💧 Precipitation",
-      rain: "🌦️ Rainfall",
-      showers: "🌧️ Showers",
-      snowfall: "🌨️ Snowfall",
-      snow_depth: "☃️ Snow Depth",
-      cloud_cover: "☁️ Cloud Cover Percentage",
-      visibility: "👁️ Visibility",
-      wind_speed_10m: "🍃 Wind speed",
-      wind_gusts_10m: "️💨 Wind gusts",
-      uv_index: "☀️ UV Index",
-      is_day: "🌙 Time of Day",
-    };
-
-    let formatWeatherValues = (key, obj) => {
-      if (key === "timezone") {
-        return obj.weather.weatherDetails[key];
-      }
-      if (key === "is_day") {
-        return obj.weather.weatherDetails[key] === 1
-          ? "Day (0)"
-          : "Night (-10)";
-      }
-      let unit = "";
-      if (key === "temperature_2m") {
-        unit = "°F";
-      }
-      if (key === "precipitation_probability" || key === "cloud_cover") {
-        unit = "%";
-      }
-      if (
-        key === "precipitation" ||
-        key === "rain" ||
-        key === "showers" ||
-        key === "snowfall" ||
-        key === "snow_depth"
-      ) {
-        unit = "in";
-      }
-      if (key === "visibility") {
-        unit = "ft";
-      }
-      if (key === "wind_speed_10m" || key === "wind_gusts_10m") {
-        unit = "mp/h";
-      }
-
-      return (
-        Number(obj.weather.weatherDetails[key]).toFixed(2).toString() +
-        " " +
-        unit +
-        " (" +
-        Number(obj.weather.weatherScore.contributions[key])
-          .toFixed(0)
-          .toString() +
-        ")"
-      );
-    };
-
-    let changeZoom = (map, geojson) => {
-      const line = turf.lineString(geojson);
-      const bbox = turf.bbox(line);
-
-      map.current.fitBounds(
-        [
-          [bbox[0], bbox[1]],
-          [bbox[2], bbox[3]],
-        ],
-        { padding: 100 }
-      );
-    };
-
     let getRoute = async (start, end, time) => {
       try {
         var json = await routeService.getRoute(
@@ -156,78 +228,10 @@ let MapSidebar = ({ map }) => {
 
         changeZoom(map, geojson.geometry.coordinates);
       }
+      
+      map.current.off("click", "route", onClickRoute);
+      map.current.on("click", "route", onClickRoute);
 
-      map.current.on("click", "route", async (e) => {
-        const coordinates = [e.lngLat.lng, e.lngLat.lat];
-
-        try {
-          var location = await geocodeService.getReverseGeocode(
-            coordinates[0],
-            coordinates[1]
-          );
-        } catch (err) {
-          setErrorMessage(err.message);
-          return;
-        }
-
-        try {
-          var timeOffset = await routeService.getTimeOffset(
-            coordinates[0],
-            coordinates[1]
-          );
-        } catch (err) {
-          setErrorMessage(err.message);
-          return;
-        }
-
-        const time = DateTime.fromFormat(startDate, "yyyy'-'MM'-'dd'T'HH':'mm")
-          .plus({
-            seconds: timeOffset,
-          })
-          .toISO();
-
-        try {
-          var weatherAtPoint = await weatherService.getWeatherAtPoint(
-            coordinates[0],
-            coordinates[1],
-            time
-          );
-        } catch (err) {
-          setErrorMessage(err.message);
-          return;
-        }
-        const obj = { weather: weatherAtPoint };
-
-        new mapboxgl.Popup()
-          .setLngLat(coordinates)
-          .setHTML(
-            `
-              <div class="popup-content">
-                <div class="popup-header">
-                  <h3>Weather Information for ${location}</h3>
-                </div>
-                <div class="popup-body">
-                  <table>
-                    ${Object.keys(obj.weather.weatherScore.contributions)
-                        .map((k) => {
-                          let f = formatWeatherValues(k, obj);
-                          let name = formatDict[k];
-
-                          if (k === "time") {
-                            f = DateTime.fromISO(time).toFormat("yyyy'-'MM'-'dd' 'HH':'MM a")
-                            console.log(f);
-                          }
-
-                          return `<tr><td class="popup-item"><span class="popup-label">${name}:</span></td> <td>${f}</td></tr>`;
-                        })
-                      .join("")}
-                  <table>
-                </div>
-              </div>
-              `
-          )
-          .addTo(map.current);
-      });
       map.current.on("mouseenter", "route", () => {
         map.current.getCanvas().style.cursor = "pointer";
       });
@@ -318,9 +322,6 @@ let MapSidebar = ({ map }) => {
       setErrorMessage("");
     };
 
-    const allLayers = map.current.getStyle().layers;
-    const regexPattern = /^(marker|text).*/;
-
     if (map.current.getLayer("route")) {
       console.log("removed layer route");
       map.current.removeLayer("route");
@@ -329,6 +330,9 @@ let MapSidebar = ({ map }) => {
     if (map.current.getSource("route")) {
       map.current.removeSource("route");
     }
+    
+    const allLayers = map.current.getStyle().layers;
+    const regexPattern = /^(marker|text).*/;
 
     allLayers.forEach((layer) => {
       if (regexPattern.test(layer.id)) {
