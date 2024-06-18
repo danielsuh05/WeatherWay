@@ -5,6 +5,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: Create .env file
+      working-directory: ./backend
+      run: |
+        touch .env
+        echo PORT=3001 >> .env
+        echo MAPBOX_ACCESS_TOKEN=${{ secrets.MAPBOX_ACCESS_TOKEN }} >> .env
     - name: Install modules
       working-directory: ./backend
       run: npm ci
