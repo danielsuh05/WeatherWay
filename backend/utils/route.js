@@ -51,7 +51,7 @@ let getMarkers = async () => {
       });
       
       // Gets the weather at the point and at the time at which they reach that point
-      const weatherObj = await getWeatherAtPointTime(point[0], point[1], time);
+      const weatherObj = await getWeatherAtPointTime(point[0], point[1], time.toISO());
 
       ret.push({ point: point, weather: weatherObj });
     })
@@ -79,7 +79,7 @@ let getTimeOffsetAlongPath = (longitude, latitude) => {
       [coordinates[i - 1][0], coordinates[i - 1][1]]
     ]);
 
-    const isOnLine = turf.booleanPointOnLine(pt, line, {epsilon: 1e-5});
+    const isOnLine = turf.booleanPointOnLine(pt, line, {epsilon: 1e-3});
 
     if(isOnLine) {
       return sumDurations;

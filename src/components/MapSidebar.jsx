@@ -21,12 +21,13 @@ let MapSidebar = ({ map }) => {
   const [errorMessage, setErrorMessage] = useState("");
   const [averageScore, setAverageScore] = useState(-1);
   const [startDate, setStartDate] = useState(
-    DateTime.now().toFormat("yyyy'-'MM'-'dd'T'HH':'MM")
+    DateTime.now().toFormat("yyyy'-'MM'-'dd'T'HH':'mm")
   );
   const [selectedOption, setSelectedOption] = useState("score");
 
-  // use `useCallback` because mapbox requires the same function reference when using on/off
-  let onClickRoute = useCallback(async (e) => {
+  let displayDate = startDate;
+
+  let onClickRoute = async (e) => {
     const coordinates = [e.lngLat.lng, e.lngLat.lat];
 
     try {
@@ -49,9 +50,7 @@ let MapSidebar = ({ map }) => {
       return;
     }
 
-    console.log('offset', timeOffset);
-
-    const time = DateTime.fromFormat(startDate, "yyyy'-'MM'-'dd'T'HH':'mm")
+    const time = DateTime.fromFormat(displayDate, "yyyy'-'MM'-'dd'T'HH':'mm")
       .plus({
         seconds: timeOffset,
       })
@@ -99,7 +98,7 @@ let MapSidebar = ({ map }) => {
               `
       )
       .addTo(map.current);
-  }, []);
+  }
 
   const formatDict = {
     timezone: "🕚 Timezone",
@@ -170,7 +169,7 @@ let MapSidebar = ({ map }) => {
         [bbox[0], bbox[1]],
         [bbox[2], bbox[3]],
       ],
-      { padding: 100 }
+      { padding: 150 }
     );
   };
 
@@ -222,7 +221,6 @@ let MapSidebar = ({ map }) => {
       changeZoom(map, geojson.geometry.coordinates);
     }
 
-    map.current.off("click", "route", onClickRoute);
     map.current.on("click", "route", onClickRoute);
 
     map.current.on("mouseenter", "route", () => {
@@ -379,6 +377,16 @@ let MapSidebar = ({ map }) => {
   }, [selectedOption, getDisplayMarkers]);
 
   let renderRoute = async (map, startPoint, endPoint) => {
+    const allLayers = map.current.getStyle().layers;
+    const regexPattern = /^(marker|text).*/;
+
+    allLayers.forEach((layer) => {
+      if (regexPattern.test(layer.id)) {
+        map.current.removeLayer(layer.id);
+        map.current.removeSource(layer.id);
+      }
+    });
+    
     if (map.current.getLayer("route")) {
       map.current.removeLayer("route");
     }
@@ -401,6 +409,7 @@ let MapSidebar = ({ map }) => {
   };
 
   let handleSubmit = (e) => {
+    map.current.on("click", "route", (e) => {e.preventDefault();});
     e.preventDefault();
 
     setErrorMessage("");
@@ -423,8 +432,13 @@ let MapSidebar = ({ map }) => {
     }
   };
 
-  let onDateChange = (e) => {
-    setStartDate(e.target.value);
+  let onDateChange = async (e) => {
+    const date = e.target.value;
+    setStartDate(date);
+
+    displayDate = date;
+
+    console.log(displayDate);
   };
 
   let handleRadioClick = (e) => {
