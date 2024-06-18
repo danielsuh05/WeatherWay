@@ -1,192 +1,159 @@
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap');
-
 html {
-  font-family: 'Open Sans', 'Roboto', sans-serif;
+	font-family: 'Open Sans', 'Roboto', sans-serif;
 }
-
 .map-container {
-  height: 100%;
+	height: 100%;
 }
-
 .content-container {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 100%;
-  height: 100%;
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	width: 100%;
+	height: 100%;
 }
-
 .mapboxgl-popup p {
-  opacity: 1.0;
-  text-align: center;
+	opacity: 1.0;
+	text-align: center;
 }
-
 .mapboxgl-popup-content {
-  text-align: center;
-  background-color:rgba(255, 255, 255, 0.90);
-  width: 350px;
+	text-align: center;
+	background-color:rgba(255, 255, 255, 0.90);
+	width: 350px;
 }
-
 .mapboxgl-popup-tip {
-  opacity: 0.9;
+	opacity: 0.9;
 }
-
 table {
-  table-layout: fixed;
+	table-layout: fixed;
 }
-
 td:first-of-type {
-  width: 200px;
+	width: 200px;
 }
-
 .popup-header {
-  border-bottom: 1px solid #ccc;
-  margin-bottom: 5px;
-  padding-bottom: 5px;
+	border-bottom: 1px solid #ccc;
+	margin-bottom: 5px;
+	padding-bottom: 5px;
 }
-
 .popup-header h3 {
-  margin: 0;
-  font-size: 16px;
+	margin: 0;
+	font-size: 16px;
 }
-
 .popup-body {
-  display: grid;
-  grid-template-columns: auto auto;
+	display: grid;
+	grid-template-columns: auto auto;
 }
-
 .popup-item {
-  display: flex;
-  align-items: center;
-  font-size: 14px;
+	display: flex;
+	align-items: center;
+	font-size: 14px;
 }
-
 .popup-icon {
-  margin-right: 5px;
+	margin-right: 5px;
 }
-
 .popup-label {
-  font-weight: bold;
+	font-weight: bold;
 }
-
 .sidebar {
-  height: 100vh;
-  background-color: rgba(255, 255, 255, 0.6);
-  margin-top: 0;
+	height: 100vh;
+	background-color: rgba(255, 255, 255, 0.6);
+	margin-top: 0;
 }
-
 .radio-button {
-  border: 1.75px solid rgba(0, 0, 0, 0.2);
-  border-radius: 0.25rem;
-  margin-bottom: 3px;
-  padding: 10px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-
-  background-color: white;
+	border: 1.75px solid rgba(0, 0, 0, 0.2);
+	border-radius: 0.25rem;
+	margin-bottom: 3px;
+	padding: 10px;
+	cursor: pointer;
+	transition: background-color 0.3s ease;
+	background-color: white;
 }
-
 .radio-button:hover {
-  background-color: #dbdbdb;
+	background-color: #dbdbdb;
 }
-
 .radio-button-selected {
-  border: 1.75px solid rgba(0, 0, 0, 0.2);
-  border-radius: 0.25rem;
-  margin-bottom: 3px;
-  padding: 10px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  
-  background-color: #488fed;
-  color: white;
+	border: 1.75px solid rgba(0, 0, 0, 0.2);
+	border-radius: 0.25rem;
+	margin-bottom: 3px;
+	padding: 10px;
+	cursor: pointer;
+	transition: background-color 0.3s ease;
+	background-color: #488fed;
+	color: white;
 }
-
 .title {
-  display: flex;
-  align-items: center;
-  max-width: max-content;
-  margin: 1rem auto 1rem auto;
-  gap: 10px;
+	display: flex;
+	align-items: center;
+	max-width: max-content;
+	margin: 1rem auto 1rem auto;
+	gap: 10px;
 }
-
 .title img {
-  width: 30px;
-  height: 30px;
+	width: 30px;
+	height: 30px;
 }
-
 .radio-form {
-  margin-top: 5px;
-  display: flex;
-  flex-direction: column;
+	margin-top: 5px;
+	display: flex;
+	flex-direction: column;
 }
-
 input:not([type="radio"]) {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  background-color: transparent;
-  border: none;
-  padding: 0;
-  margin: 0;
-  box-sizing: border-box;
-  border: 1.75px solid #333;
-  background-color: white;
-  border-radius: 0.25rem;
-  display: block;
-  box-sizing: border-box;
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  margin-top: 5px;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	appearance: none;
+	background-color: transparent;
+	border: none;
+	padding: 0;
+	margin: 0;
+	box-sizing: border-box;
+	border: 1.75px solid #333;
+	background-color: white;
+	border-radius: 0.25rem;
+	display: block;
+	box-sizing: border-box;
+	width: 100%;
+	padding: 0.5rem 0.75rem;
+	margin-top: 5px;
 }
-
 .form {
-  padding: 5px;
+	padding: 5px;
 }
-
 #coord1, #coord2, #departure-time, .radio-form {
-  margin-bottom: 1rem
+	margin-bottom: 1rem
 }
-
 input[type=submit] {
-  margin-bottom: 10px;
-  cursor: pointer;
-  background-color: #488fed;
-  border: none;
-  color: white;
-  padding: 10px;
-  border-radius: 0.25rem;
-  font-size: 16px;
+	margin-bottom: 10px;
+	cursor: pointer;
+	background-color: #488fed;
+	border: none;
+	color: white;
+	padding: 10px;
+	border-radius: 0.25rem;
+	font-size: 16px;
 }
-
 input[type=submit]:hover {
-  background-color: #3370b2;
+	background-color: #3370b2;
 }
-
 #departure-time {
-  font-family: 'Open Sans', 'Roboto', sans-serif;
+	font-family: 'Open Sans', 'Roboto', sans-serif;
 }
-
 .error {
-  border: 2px solid red;
-  background: rgba(255, 0, 0, 0.2);
-  border-radius: 0.25rem;
-  padding-left: 7.5px;
-  padding-top: 3px;
-  padding-bottom: 3px;
+	border: 2px solid red;
+	background: rgba(255, 0, 0, 0.2);
+	border-radius: 0.25rem;
+	padding-left: 7.5px;
+	padding-top: 3px;
+	padding-bottom: 3px;
 }
-
 .error h3 {
-  padding: 0 0 10px 0;
-  margin: 0px;
+	padding: 0 0 10px 0;
+	margin: 0px;
 }
-
 .error p {
-  padding: 0px;
-  margin: 0px;
+	padding: 0px;
+	margin: 0px;
 }
-
 body {
-  margin: 0;
+	margin: 0;
 }
