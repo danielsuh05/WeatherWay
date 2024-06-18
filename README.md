@@ -8,7 +8,7 @@ highlighting potential areas of severe weather. This allows for quick identifica
 - <strong>Customizable overlays:</strong> Users have the option to switch between different weather marker overlays on the map.
 This includes options for overall weather score, temperature, precipitation, or wind speed, allowing users to focus on the weather aspects most relevant to their needs.
 - <strong>Interactive route:</strong> Users can click anywhere on the route to access detailed data for that specific location <strong>at</strong> the time they will reach it along the route. This includes data such as rainfall, snowfall, snow depth, visibility, and more. 
-- <strong>Adjustable departure time:</strong> Users have the ability to define their intended departure time. This triggers an update to the displayd route, weather data, and forecasted conditions. This feature streamlines the process of comparing weather conditions across different departure windows, enabling users to plan their trip accordingly. 
+- <strong>Adjustable departure time:</strong> Users have the ability to define their intended departure time. This triggers an update to the displayed route, weather data, and forecasted conditions. This feature streamlines the process of comparing weather conditions across different departure windows, enabling users to plan their trip accordingly. 
 
 ## Technologies Stack
 <strong>Technologies used: </strong>
@@ -28,7 +28,7 @@ When a user clicks on the route, a `GET` request is made to the backend to fetch
 ### Server:
 The server contains three main controllers: geocode, route, and weather.
 
-<strong>Geocode controller:</strong> a simple controller that returns the name of a city/location for a given longitude and latitude. It utilizes MapBox's reverse geocode functionality, which returns information about a certain longitude and latitude.
+<strong>Geocode controller:</strong> a simple controller that returns the name of a city/location for a given longitude and latitude. It utilizes MapBox's reverse geocoding functionality, which returns information about a certain longitude and latitude.
 
 <strong>Route controller:</strong> a controller that does three things: 
 
