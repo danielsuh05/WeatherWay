@@ -4,6 +4,14 @@ const baseURL =
   "https://api.open-meteo.com/v1/forecast?&hourly=temperature_2m,precipitation_probability,precipitation,rain,showers,snowfall,snow_depth,cloud_cover,visibility,wind_speed_10m,wind_gusts_10m,uv_index,is_day&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&forecast_days=14";
 
 let getWeatherScore = (weatherObject) => {
+  /**
+   * Gets the normalized values to calculate how much we should subtract from the maximum safety score of 100
+   * @param {number} value value to normalize
+   * @param {number} avgRange expected value on average
+   * @param {Array} dangerousRange if it is inside dangerousRange, it contributes some negative value
+   * @param {Array} safeRange if it is within safeRange, then it contributes -0
+   * @returns {number} the value normalized within the range
+   */
   let normalize = (value, avgRange, dangerousRange, safeRange) => {
     if (
       dangerousRange !== undefined &&
@@ -22,6 +30,7 @@ let getWeatherScore = (weatherObject) => {
     return (value - avgRange[0]) / (avgRange[1] - avgRange[0]);
   };
 
+  // estimated values
   const weights = {
     temperature_2m: 0.05,
     precipitation_probability: 0.2,
@@ -111,7 +120,7 @@ let getWeatherScore = (weatherObject) => {
 };
 
 /**
- *
+ * Gets the weather at a certain point and time using lerp
  * @param {number} latitude latitude to get weather for
  * @param {number} longitude longitude to get weather for
  * @param {string} time time LOCALIZED to the specific (longitude, latitude).
@@ -139,7 +148,6 @@ let getWeatherAtPointTime = async (longitude, latitude, time) => {
     };
   };
 
-  // TODO: there's a bottleneck here with the API, possibly fix with one weather API call
   const url = `${baseURL}&latitude=${latitude}&longitude=${longitude}`;
 
   const weather = await fetch(url)
@@ -171,7 +179,7 @@ let getWeatherAtPointTime = async (longitude, latitude, time) => {
           a[k] = beginWeather[k];
           return a;
         } else if (k === "time") {
-          a[k] = time.toString();
+          a[k] = time;
           return a;
         }
         a[k] = beginWeather[k] + (endWeather[k] - beginWeather[k]) * t;

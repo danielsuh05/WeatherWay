@@ -2,6 +2,9 @@ const { reverseGeocode } = require("../utils/geocode");
 
 const routeController = require("express").Router();
 
+/**
+ * Given (long, lat), return the name of the location that is at that point. 
+ */
 routeController.get(
   "/:long&:lat",
   async (req, res) => {

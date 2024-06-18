@@ -1,4 +1,3 @@
-const CheapRuler = require("cheap-ruler");
 const { getWeatherAtPointTime } = require("./weather");
 const { DateTime } = require("luxon");
 const turf = require("@turf/turf");
@@ -13,22 +12,8 @@ let startCoord, endCoord;
 let constructURL = (startLong, startLat, endLong, endLat, time) => {
   return (
     baseURL +
-    `${startLong}%2C${startLat}%3B${endLong}%2C${endLat}?depart_at=${time}&alternatives=false&geometries=geojson&language=en&overview=full&steps=true&access_token=${process.env.MAPBOX_ACCESS_TOKEN}`
+    `${startLong}%2C${startLat}%3B${endLong}%2C${endLat}?depart_at=${time}&annotations=duration&alternatives=false&geometries=geojson&language=en&overview=full&steps=true&access_token=${process.env.MAPBOX_ACCESS_TOKEN}`
   );
-};
-
-/**
- * @param {number} lat1 latitude of first point
- * @param {number} lon1 longitude of first point
- * @param {number} lat2 latitude of second point
- * @param {number} lon2 longitude of second point
- * @returns distance between the points in km
- */
-let latLongDistance = (lat1, lon1, lat2, lon2) => {
-  const ruler = new CheapRuler(lat1, "kilometers");
-  const distance = ruler.distance([lat1, lon1], [lat2, lon2]);
-
-  return distance;
 };
 
 /**
@@ -50,6 +35,7 @@ let getMarkers = async () => {
   const numMarkers = Math.max(5, len / 150);
   const multiplier = len / 150 >= 5 ? 150 : len / 5;
 
+  // Gets the points at a certain distance from the starting point (should be ~equidistant)
   for (let i = 1; i < numMarkers; i += 1) {
     points.push(turf.along(line, i * multiplier, options).geometry.coordinates);
   }
@@ -58,13 +44,13 @@ let getMarkers = async () => {
 
   let ret = [];
 
-  // TODO: convert this into one api call into separate ones to not get limited
   await Promise.all(
     points.map(async (point) => {
-      // TODO: if users want to change the time, then just change it here
       const time = DateTime.fromFormat(startTime, "yyyy'-'MM'-'dd'T'HH':'mm").plus({
         seconds: getTimeOffsetAlongPath(point[0], point[1]),
       });
+      
+      // Gets the weather at the point and at the time at which they reach that point
       const weatherObj = await getWeatherAtPointTime(point[0], point[1], time);
 
       ret.push({ point: point, weather: weatherObj });
@@ -81,49 +67,26 @@ let getMarkers = async () => {
  * @returns {number} how long it will take to get to that point along the route
  */
 let getTimeOffsetAlongPath = (longitude, latitude) => {
-  console.log(longitude, latitude);
-  const route = savedRoute;
-  const legs = route.routes[0].legs;
+  const durations = savedRoute.routes[0].legs[0].annotation.duration;
+  const coordinates = savedRoute.routes[0].geometry.coordinates;
   const pt = turf.point([longitude, latitude]);
 
   let sumDurations = 0;
-  for (let i = 0; i < legs.length; i++) {
-    for (let j = 0; j < legs[i].steps.length; j++) {
-      const coordinates = legs[i].steps[j].geometry.coordinates;
-      const overallDistance = legs[i].steps[j].distance;
 
-      let estDistance = 0; // used for interpolation
+  for(let i = 1; i < coordinates.length; i++) {
+    const line = turf.lineString([
+      [coordinates[i][0], coordinates[i][1]],
+      [coordinates[i - 1][0], coordinates[i - 1][1]]
+    ]);
 
-      for (let k = 0; k < coordinates.length; k++) {
-        let onLine = false;
-        if (k > 0) {
-          estDistance +=
-            latLongDistance(
-              coordinates[k][1],
-              coordinates[k][0],
-              coordinates[k - 1][1],
-              coordinates[k - 1][0]
-            ) * 1000;
+    const isOnLine = turf.booleanPointOnLine(pt, line, {epsilon: 1e-5});
 
-          const line = turf.lineString([
-            [coordinates[k][0], coordinates[k][1]],
-            [coordinates[k - 1][0], coordinates[k - 1][1]],
-          ]);
-
-          onLine = turf.booleanPointOnLine(pt, line, { epsilon: 1e-3 });
-        }
-        if (onLine) {
-          const t = estDistance / overallDistance;
-          console.log(sumDurations, estDistance, overallDistance);
-          return sumDurations + legs[i].steps[j].duration * t;
-        }
-      }
-
-      sumDurations += legs[i].steps[j].duration;
+    if(isOnLine) {
+      return sumDurations;
     }
-  }
 
-  console.log(sumDurations);
+    sumDurations += durations[i - 1];
+  }
 
   if (longitude === startCoord[0] && latitude == startCoord[1]) {
     return 0;
@@ -137,7 +100,7 @@ let getTimeOffsetAlongPath = (longitude, latitude) => {
 };
 
 /**
- * Gets the JSON response of the route from MapBox API given a start and end (longitude, latitude)
+ * Gets the JSON response of the route from MapBox API given a start and end (longitude, latitude).
  * @param {number} startLong starting longitude
  * @param {number} startLat starting latitude
  * @param {number} endLong ending longitude
@@ -147,7 +110,6 @@ let getTimeOffsetAlongPath = (longitude, latitude) => {
  */
 let getRoute = async (startLong, startLat, endLong, endLat, time) => {
   const url = constructURL(startLong, startLat, endLong, endLat, time);
-  console.log(url);
 
   const route = await fetch(url)
     .then((response) => {
