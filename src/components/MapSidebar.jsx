@@ -24,6 +24,9 @@ let MapSidebar = ({ map }) => {
     DateTime.now().toFormat("yyyy'-'MM'-'dd'T'HH':'mm")
   );
   const [selectedOption, setSelectedOption] = useState("score");
+  
+  // we need to store the onClickRoute function in a ref because MapBox on/off requires the same function
+  const storeFunctionRef = useRef(null);
 
   let displayDate = startDate;
 
@@ -221,7 +224,9 @@ let MapSidebar = ({ map }) => {
       changeZoom(map, geojson.geometry.coordinates);
     }
 
+    map.current.off("click", "route", storeFunctionRef.current);
     map.current.on("click", "route", onClickRoute);
+    storeFunctionRef.current = onClickRoute;
 
     map.current.on("mouseenter", "route", () => {
       map.current.getCanvas().style.cursor = "pointer";
