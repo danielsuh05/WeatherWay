@@ -30,6 +30,10 @@ let MapSidebar = ({ map }) => {
 
   let displayDate = startDate;
 
+  /**
+   * Creates a pop-up for when the user clicks on the route
+   * @param {event} e 
+   */
   let onClickRoute = async (e) => {
     const coordinates = [e.lngLat.lng, e.lngLat.lat];
 
@@ -103,6 +107,9 @@ let MapSidebar = ({ map }) => {
       .addTo(map.current);
   }
 
+  /**
+   * Formatted labels to print in the pop-up
+   */
   const formatDict = {
     timezone: "🕚 Timezone",
     time: "⏰ Local Time",
@@ -121,6 +128,12 @@ let MapSidebar = ({ map }) => {
     is_day: "🌙 Time of Day",
   };
 
+  /**
+   * Formats the weather values to be truncated and include units
+   * @param {string} key the key of a particular statistic about the weather
+   * @param {any} obj the weather value to print alongside the key
+   * @returns {string} the formatted weather value with unit
+   */
   let formatWeatherValues = (key, obj) => {
     if (key === "timezone") {
       return obj.weather.weatherDetails[key];
@@ -163,6 +176,11 @@ let MapSidebar = ({ map }) => {
     );
   };
 
+  /**
+   * Based on a given route, zoom the map out to fit it with some extra padding around
+   * @param {Map} map current map to render objects to
+   * @param {GeoJSON} geojson JSON of the route -> will zoom to fit the route
+   */
   let changeZoom = (map, geojson) => {
     const line = turf.lineString(geojson);
     const bbox = turf.bbox(line);
@@ -176,6 +194,12 @@ let MapSidebar = ({ map }) => {
     );
   };
 
+  /**
+   * Calculates + outputs the route onto the map
+   * @param {Array} start (longitude, latitude) of starting point
+   * @param {Array} end (longitude, latitude) of ending point
+   * @param {string} time — time in the format YYYY-MM-ddTHH:mm
+   */
   let getRoute = async (start, end, time) => {
     try {
       var json = await routeService.getRoute(
@@ -239,6 +263,7 @@ let MapSidebar = ({ map }) => {
     setErrorMessage("");
   };
 
+  // Ensure that the markers don't get rendered on the first render (there is no route yet)
   let firstRender = useRef(true);
 
   /**
@@ -253,6 +278,7 @@ let MapSidebar = ({ map }) => {
     const allLayers = map.current.getStyle().layers;
     const regexPattern = /^(marker|text).*/;
 
+    // remove all previous marker layers
     allLayers.forEach((layer) => {
       if (regexPattern.test(layer.id)) {
         map.current.removeLayer(layer.id);
@@ -317,6 +343,7 @@ let MapSidebar = ({ map }) => {
 
       markerValue = Math.max(Math.min(Math.round(markerValue), 100), 0);
 
+      // circle markers
       map.current.addLayer({
         id: `marker${i}`,
         type: "circle",
@@ -344,6 +371,7 @@ let MapSidebar = ({ map }) => {
 
       sumScores += obj.weather.weatherScore.score;
 
+      // text for markers
       map.current.addLayer({
         id: `text${i}`,
         type: "symbol",
@@ -375,12 +403,19 @@ let MapSidebar = ({ map }) => {
 
     setAverageScore(Number(sumScores / markers.length).toFixed(1));
     setErrorMessage("");
-  }, [selectedOption]);
+  }, [selectedOption, map]);
 
+  // on change of selectedOption, re-render the markers
   useEffect(() => {
     getDisplayMarkers();
   }, [selectedOption, getDisplayMarkers]);
 
+  /**
+   * Over-arching function that renders everything
+   * @param {Map} map current map
+   * @param {Array} startPoint (longitude, latitude) of starting point
+   * @param {Array} endPoint (longitude, latitude) of starting point
+   */
   let renderRoute = async (map, startPoint, endPoint) => {
     const allLayers = map.current.getStyle().layers;
     const regexPattern = /^(marker|text).*/;
