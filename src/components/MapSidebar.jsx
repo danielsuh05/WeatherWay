@@ -92,7 +92,7 @@ let MapSidebar = ({ map }) => {
 
                         if (k === "time") {
                           f = DateTime.fromISO(time).toFormat(
-                            "yyyy'-'MM'-'dd' 'HH':'mm a"
+                            "yyyy'-'MM'-'dd' 'hh':'mm a"
                           );
                         }
 
@@ -190,7 +190,13 @@ let MapSidebar = ({ map }) => {
         [bbox[0], bbox[1]],
         [bbox[2], bbox[3]],
       ],
-      { padding: 150 }
+      { padding: {
+        top: 150,
+        bottom: 150,
+        left: 400,
+        right: 150
+      }
+       }
     );
   };
 
