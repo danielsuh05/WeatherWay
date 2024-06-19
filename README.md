@@ -1,7 +1,7 @@
 # WeatherWay
 ## Overview
 
-https://github.com/danielsuh05/WeatherWay/assets/63919918/2cca6b04-607f-4aeb-9bf1-6c21a006f738
+https://github.com/danielsuh05/WeatherWay/assets/63919918/a9975082-a2d3-4598-a124-63c9e9949a07
 
 WeatherWay is an application that shows the weather conditions along a route. The user can specify the starting and ending points of their trip, and the application will display both high-level and low-level weather data along their route.
 
