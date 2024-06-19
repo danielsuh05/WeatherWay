@@ -16,14 +16,14 @@ This includes options for overall weather score, temperature, precipitation, or 
 ## Technologies Stack
 <strong>Technologies used: </strong>
 - <strong>React:</strong> Front-end development
-- <strong>JavaScript:</strong> Language for back-end
-- <strong>Express:</strong> Library used to create the back-end according to the REST API standards
+- <strong>JavaScript:</strong> Language for server
+- <strong>Express:</strong> Library used to create the server according to the REST API standards
 - <strong>Jest:</strong> Framework for unit tests
-- <strong>Axios:</strong> Library to call APIs from both the front-end and back-end
-- <strong>MapBox:</strong> Maps API to display the map on the front-end and get directions on the back-end
+- <strong>Axios:</strong> Library to call APIs from both the front end and the server
+- <strong>MapBox:</strong> Maps API to display the map on the front end and get directions on the server
 - <strong>Open-Meteo:</strong> Weather API to get weather data
 
-### Front-end:
+### Front end:
 The front end is a React application that uses `axios` for data retrieval. The core components of this application are the interactive map and the sidebar. Upon receiving user input, a `GET` request is sent to the server to fetch a `GeoJSON` object from the MapBox API. Once the route data is obtained, the application retrieves and displays markers along the route with their corresponding data.
 
 When a user clicks on the route, a `GET` request is made to the backend to fetch weather data for that specific point, which is then displayed in a popup on the map. Similarly, when the user switches between different marker overlay options, a request is sent to retrieve the relevant data, and the markers are re-rendered accordingly.
